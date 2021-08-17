@@ -1,7 +1,8 @@
 from time import time
 from copy import deepcopy
 
-def bfs(board,results):
+
+def bfs(board, results):
     nodes_expanded = 0
     frontier = [board]
     explored = set()
@@ -13,17 +14,19 @@ def bfs(board,results):
             results.nodes_expanded = nodes_expanded
             results.frontier_size = len(frontier)
             return
-        nodes_expanded += 1
         moves = currNode.moves_available()
         currNode.fboxes = frozenset(currNode.boxes)
         explored.add(currNode)
+        if moves:
+            nodes_expanded += 1
         for m in moves:
             child = deepcopy(currNode)
             child.move(m)
             if child not in explored:
                 frontier.append(child)
 
-def dfs(board,results):
+
+def dfs(board, results):
     nodes_expanded = 0
     frontier = [board]
     explored = set()
@@ -35,10 +38,11 @@ def dfs(board,results):
             results.nodes_expanded = nodes_expanded
             results.frontier_size = len(frontier)
             return
-        nodes_expanded += 1
         moves = currNode.moves_available()
         currNode.fboxes = frozenset(currNode.boxes)
         explored.add(currNode)
+        if moves:
+            nodes_expanded += 1
         for m in moves:
             child = deepcopy(currNode)
             child.move(m)
