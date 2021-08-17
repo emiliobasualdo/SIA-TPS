@@ -3,7 +3,7 @@ from time import time
 
 from Board import load_board, Results
 from TP1.ggs import ggs
-from TP1.heuristics import xxx
+from TP1.heuristics import linear_distance
 from bfs import bfs, dfs
 
 if __name__ == '__main__':
@@ -22,7 +22,7 @@ if __name__ == '__main__':
         "ggs": ggs
     }
     heuristics = {
-        "xxxx": xxx
+        "linear_distance": linear_distance
     }
     algo = _config["algorithm"]
     results = Results()
