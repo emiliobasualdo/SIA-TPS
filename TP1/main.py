@@ -1,7 +1,10 @@
 import configparser
+from time import time
 
-from TP1.Board import load_board
+from TP1.Board import load_board, Results
+from TP1.bfs import bfs
 from TP1.dfs import dfs
+
 
 if __name__ == '__main__':
     config = configparser.ConfigParser()
@@ -11,7 +14,13 @@ if __name__ == '__main__':
     board = load_board(_config["board"])
 
     algo = _config["algorithm"]
-    if algo == "dfs":
-        results = dfs(board)
+    results = Results()
+    start = time()
+    if algo == "bfs":
+        results.algorithm = 'bfs'
+        bfs(board, results)
 
-    print(board)
+    end = time()
+    results.time_taken = (end-start)
+    print(results)
+

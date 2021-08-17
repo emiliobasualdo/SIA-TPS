@@ -33,23 +33,15 @@ class Tile:
         # usado para mirar un paso más allá del actual
         return Tile(self.x * 2, self.y * 2)
 
-LEFT = "l"
-RIGHT = "r"
-UP = "u"
-DOWN = "p"
-L = Direction(Tile(-1, 0), LEFT)
-R = Direction(Tile(1, 0), RIGHT)
-U = Direction(Tile(0, -1), UP)
-D = Direction(Tile(0, 1), DOWN)
+
+L = Direction(Tile(-1, 0), 'l')
+R = Direction(Tile(1, 0), 'r')
+U = Direction(Tile(0, -1), 'u')
+D = Direction(Tile(0, 1), 'd')
 directions = [U, D, L, R]
 
 
 class Board:
-    '''
-    Board's overloaded functions and functions for
-    board manipulation live here
-    '''
-
     def __init__(self, dir_list):
         self.dir_list = dir_list  # list of directions for solution
         self.walls = set()
@@ -60,25 +52,21 @@ class Board:
         self.cost = 1  # used for UCS and heuristic searches
 
     def __eq__(self, other):
-        ''' checking for 'equality' of box positions and player positions '''
         if self.boxes.issubset(other.boxes) and self.player == other.player:
             return True
         else:
             return False
 
     def __hash__(self):
-        ''' hashes by frozenset of box positions '''
         return hash((self.fboxes, self.player))
 
     def __gt__(self, other):
-        ''' comparison by cost '''
         if self.cost > other.cost:
             return True
         else:
             return False
 
     def __lt__(self, other):
-        ''' comparison by cost '''
         if self.cost < other.cost:
             return True
         else:
@@ -101,7 +89,6 @@ class Board:
         for d in directions:
             if self.player + d.tile not in self.walls:
                 if self.player + d.tile in self.boxes:
-                    # what if there's a wall or box behind it?
                     if self.player + d.tile.double() not in self.boxes.union(self.walls):
                         moves.append(d)
                 else:
@@ -109,29 +96,43 @@ class Board:
         return moves
 
     def move(self, direction):
-        ''' moves player and box '''
         p = self.player + direction.tile
         if p in self.boxes:
             self.boxes.remove(p)
             self.boxes.add(p + direction.tile)
-            self.ucsCost = 2
         self.player = p
         self.dir_list.append(direction)
 
     def is_win(self):
-        ''' Checks for winning/final state '''
         if self.goals.issubset(self.boxes):
             return True
         else:
             return False
 
     def getDirections(self):
-        ''' Outputs the list of directions taken for the solution '''
         chars = ''
         for d in self.dir_list:
             chars += d.char
             chars += ', '
         return chars
+
+
+class Results:
+    def __init__(self):
+        self.algorithm = None
+        self.solved = None
+        self.frontier_size = None
+        self.nodes_expanded = 0
+        self.time_taken = -1
+
+    def __repr__(self):
+        return str({
+            "algorithm": self.algorithm,
+            "solved": self.solved,
+            "frontier_size": self.frontier_size,
+            "nodes_expanded": self.nodes_expanded,
+            "time_taken": self.time_taken,
+        })
 
 
 def load_board(filename):
