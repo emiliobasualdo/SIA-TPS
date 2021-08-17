@@ -2,7 +2,7 @@ import configparser
 from time import time
 
 from Board import load_board, Results
-from bfs import bfs, dfs
+from bfs import bfs, dfs, iddfs
 
 if __name__ == '__main__':
     config = configparser.ConfigParser()
@@ -18,8 +18,11 @@ if __name__ == '__main__':
         results.algorithm = 'bfs'
         bfs(board, results)
     elif algo == "dfs":
-        results.algorithm = 'bfs'
+        results.algorithm = 'dfs'
         dfs(board, results)
+    elif algo == "iddfs":
+        results.algorithm = 'iddfs'
+        iddfs(board, results)
 
     end = time()
     results.time_taken = (end-start)
