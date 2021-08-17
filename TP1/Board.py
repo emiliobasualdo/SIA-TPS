@@ -1,3 +1,8 @@
+from collections import Set
+
+from typing import Set
+
+
 class Direction:
     def __init__(self, tile, char):
         self.tile = tile
@@ -44,11 +49,11 @@ directions = [U, D, L, R]
 class Board:
     def __init__(self, dir_list):
         self.dir_list = dir_list  # list of directions for solution
-        self.walls = set()
-        self.goals = set()
+        self.walls: Set[Tile] = set()
+        self.goals: Set[Tile] = set()
         self.boxes = set()
         self.fboxes = frozenset()  # since set() is not hashable
-        self.player = None
+        self.player: Tile = None
         self.cost = 1  # used for UCS and heuristic searches
 
     def __eq__(self, other):
@@ -108,6 +113,12 @@ class Board:
             return True
         else:
             return False
+
+    def get_free_goals(self):
+        return self.goals.difference(self.boxes)
+
+    def get_free_boxes(self):
+        return self.boxes.difference(self.goals)
 
     def getDirections(self):
         chars = ''

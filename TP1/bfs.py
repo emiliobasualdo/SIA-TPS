@@ -1,4 +1,3 @@
-from time import time
 from copy import deepcopy
 
 nodes = 0
