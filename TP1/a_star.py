@@ -3,7 +3,7 @@ from copy import deepcopy
 from heapq import heappop, heappush
 
 
-def ggs(board, results, heuristic):
+def a_star(board, results, heuristic):
     nodes_expanded = 0
     frontier = [(0, board)]
     explored = set()
