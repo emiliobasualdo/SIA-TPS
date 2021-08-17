@@ -7,13 +7,13 @@ def bfs(board,results):
     explored = set()
     keepLooking = True
     while keepLooking:
-        nodes_expanded += 1
         currNode = frontier.pop(0)
         if currNode.is_win():
             results.solved = True
             results.nodes_expanded = nodes_expanded
             results.frontier_size = len(frontier)
             return
+        nodes_expanded += 1
         moves = currNode.moves_available()
         currNode.fboxes = frozenset(currNode.boxes)
         explored.add(currNode)
@@ -29,13 +29,13 @@ def dfs(board,results):
     explored = set()
     keepLooking = True
     while keepLooking:
-        nodes_expanded += 1
         currNode = frontier.pop()
         if currNode.is_win():
             results.solved = True
             results.nodes_expanded = nodes_expanded
             results.frontier_size = len(frontier)
             return
+        nodes_expanded += 1
         moves = currNode.moves_available()
         currNode.fboxes = frozenset(currNode.boxes)
         explored.add(currNode)
