@@ -6,6 +6,20 @@ from TP1.ggs import ggs
 from TP1.heuristics import linear_distance
 from bfs import bfs, dfs
 
+non_informed = {
+    "bfs": bfs,
+    "dfs": dfs,
+    # "iddfs": iddfs # ToDo <-- cambiar!
+}
+informed = {
+    "ggs": ggs,
+    # "a_start": a_start,
+    # "ida": ida,
+}
+heuristics = {
+    "linear_distance": linear_distance
+}
+
 if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read('config.cfg')
@@ -13,19 +27,6 @@ if __name__ == '__main__':
     # cargamos el tablero
     board = load_board(_config["board"])
 
-    non_informed = {
-        "bfs": bfs,
-        "dfs": dfs,
-        #"iddfs": iddfs # ToDo <-- cambiar!
-    }
-    informed = {
-        "ggs": ggs,
-        #"a_start": a_start,
-        #"ida": ida,
-    }
-    heuristics = {
-        "linear_distance": linear_distance
-    }
     algo = _config["algorithm"]
     results = Results()
     results.algorithm = algo
