@@ -16,10 +16,12 @@ if __name__ == '__main__':
     non_informed = {
         "bfs": bfs,
         "dfs": dfs,
-        "bfs": bfs
+        #"iddfs": iddfs # ToDo <-- cambiar!
     }
     informed = {
-        "ggs": ggs
+        "ggs": ggs,
+        #"a_start": a_start,
+        #"ida": ida,
     }
     heuristics = {
         "linear_distance": linear_distance
