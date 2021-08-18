@@ -39,7 +39,6 @@ def ida(board, results, heuristic):
     keepLooking = True
     initial_pos = board.player
     frontier = [(0,board)]
-    print(heuristic)
     bound = heuristic(frontier[0][1])
     while keepLooking:
         explored = set()
