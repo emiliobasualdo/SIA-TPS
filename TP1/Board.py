@@ -34,7 +34,7 @@ class Tile:
         return hash((self.x, self.y))
 
     def __str__(self):
-        return str(self.x) + ', ' + str(self.y)
+        return "(" + str(self.x) + ', ' + str(self.y) + ")"
     def __repr__(self):
         return self.__str__()
 
@@ -178,9 +178,6 @@ def load_board(filename):
                 b.set_player(x, y)
             elif char == '$':
                 b.add_box(x, y)
-            elif char == '*':
-                b.add_box(x, y)
-                b.add_goal(x, y)
             x += 1
         y += 1
         x = 0
