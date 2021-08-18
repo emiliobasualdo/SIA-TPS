@@ -7,3 +7,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+```shell
+python main.py
+python main.py many
+```
