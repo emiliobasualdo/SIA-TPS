@@ -4,7 +4,7 @@ from time import time
 
 from Board import load_board, Results
 
-from heuristics import linear_distance
+from heuristics import euclidean_distance
 from non_informed import bfs, dfs, iddfs
 from informed import a_star, ida, ggs
 
@@ -14,26 +14,27 @@ non_informed = {
 }
 informed = {
     "ggs": ggs,
-    "a_start": a_star,
+    "a_star": a_star,
 }
 iterative = {
     "idds": iddfs,
     "ida": ida,
 }
 heuristics = {
-    "linear_distance": linear_distance
+    "euclidean_distance": euclidean_distance
 }
 
-if __name__ == '__main__':
-    config = configparser.ConfigParser()
-    config.read('config.cfg')
-    _config=config["DEFAULT"]
+
+def run(_config=None):
+    if _config is None:
+        config = configparser.ConfigParser()
+        config.read('config.cfg')
+        _config = config["DEFAULT"]
     # cargamos el tablero
     board = load_board(_config["board"])
 
     algo = _config["algorithm"]
-    results = Results()
-    results.algorithm = algo
+    results = Results(algo, _config["board"])
     start = time()
 
     if algo in non_informed:
@@ -48,7 +49,9 @@ if __name__ == '__main__':
         informed[algo](board, results, heuristics[heuristic_name])
 
     end = time()
-    results.time_taken = (end-start)
+    results.time_taken = (end - start)
     pp = pprint.PrettyPrinter(indent=2)
     pp.pprint(results.to_dict())
 
+if __name__ == '__main__':
+    run()

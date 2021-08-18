@@ -133,9 +133,10 @@ class Board:
 
 
 class Results:
-    def __init__(self):
+    def __init__(self, algo_name, board_name):
+        self.board = board_name
         self.iterative_limit = None
-        self.algorithm = None
+        self.algorithm = algo_name
         self.heuristic = None
         self.solved = None
         self.frontier_size = None
@@ -150,6 +151,7 @@ class Results:
             "algorithm": self.algorithm,
             "heuristic": self.heuristic,
             "iterative_limit": self.iterative_limit,
+            "board": self.board,
             "solved": self.solved,
             "frontier_size": self.frontier_size,
             "nodes_expanded": self.nodes_expanded,
