@@ -1,0 +1,13 @@
+,solved,frontier_size,nodes_expanded,depth,initial_pos,end_pos
+bfs,True,82.0,280,9,"(2, 3)","(2, 2)"
+dfs,True,19.0,223,25,"(2, 3)","(2, 2)"
+iddfs,True,46.0,227,13,"(2, 3)","(2, 2)"
+ggs-euclidean_distance,True,23.0,27,11,"(2, 3)","(2, 2)"
+a_star-euclidean_distance,True,19.0,42,11,"(2, 3)","(2, 2)"
+ida-euclidean_distance,,,0,0,,
+ggs-manhattan_distance,True,23.0,27,11,"(2, 3)","(2, 2)"
+a_star-manhattan_distance,True,36.0,54,9,"(2, 3)","(2, 2)"
+ida-manhattan_distance,,,0,0,,
+ggs-sum_of_manhattan,True,23.0,27,11,"(2, 3)","(2, 2)"
+a_star-sum_of_manhattan,True,36.0,54,9,"(2, 3)","(2, 2)"
+ida-sum_of_manhattan,,,0,0,,
