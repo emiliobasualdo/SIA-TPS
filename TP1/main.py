@@ -1,5 +1,6 @@
 import configparser
 import pprint
+import sys
 from time import time
 
 import pandas as pd
@@ -49,72 +50,84 @@ def run(_config=None):
 
     end = time()
     results.time_taken = (end - start)
-    pp = pprint.PrettyPrinter(indent=2)
-    pp.pprint(results.to_dict())
     return results
 
 
 def run_many_time():
-    bfs_count = 0
-    dfs_count = 0
-    iddfs_count = 0
-    ggs_count = 0
-    a_star_count = 0
-    ida_count = 0
+    counters = {**{f"ggs-{euris_name}": 0 for euris_name in heuristics.keys()},
+                **{f"a_star-{euris_name}": 0 for euris_name in heuristics.keys()},
+                **{f"ida-{euris_name}": 0 for euris_name in heuristics.keys()},
+                "bfs": 0, "dfs": 0, "iddfs": 0}
     _range = 10
+    board = "maps/easy2.txt"
+    resp = {}
     for i in range(_range):
         bfs_resp = run(dict(
-            board="maps/easy2.txt",
+            board=board,
             algorithm="bfs",
             heuristic="_",
             iterative_limit=-1
-
         ))
-        bfs_count += bfs_resp.time_taken
+        resp["bfs"] = bfs_resp.to_dict()
+        counters["bfs"] += bfs_resp.time_taken
         dfs_resp = run(dict(
-            board="maps/easy2.txt",
+            board=board,
             algorithm="dfs",
             heuristic="_",
             iterative_limit=-1
         ))
-        dfs_count += dfs_resp.time_taken
+        resp["dfs"] = dfs_resp.to_dict()
+        counters["dfs"] += dfs_resp.time_taken
         iddfs_resp = run(dict(
-            board="maps/easy2.txt",
+            board=board,
             algorithm="iddfs",
             heuristic="_",
             iterative_limit=10
         ))
-        iddfs_count += iddfs_resp.time_taken
+        resp["iddfs"] = iddfs_resp.to_dict()
+        counters["iddfs"] += iddfs_resp.time_taken
         for euris_name in heuristics.keys():
             ggs_resp = run(dict(
-                board="maps/easy2.txt",
+                board=board,
                 algorithm="ggs",
                 heuristic=euris_name,
                 iterative_limit=-1
             ))
-            ggs_count += ggs_resp.time_taken
+            name = f"ggs-{euris_name}"
+            resp[name] = ggs_resp.to_dict()
+            counters[name] += ggs_resp.time_taken
             a_star_resp = run(dict(
-                board="maps/easy2.txt",
+                board=board,
                 algorithm="a_star",
                 heuristic=euris_name,
                 iterative_limit=-1
             ))
-            a_star_count += a_star_resp.time_taken
+            name = f"a_star-{euris_name}"
+            resp[name] = a_star_resp.to_dict()
+            counters[name] += a_star_resp.time_taken
             ida_resp = run(dict(
-                board="maps/easy2.txt",
+                board=board,
                 algorithm="ida",
                 heuristic=euris_name,
                 iterative_limit=-1
             ))
-            ida_count += ida_resp.time_taken
+            name = f"ida-{euris_name}"
+            resp[name] = ida_resp.to_dict()
+            counters[name] += ida_resp.time_taken
 
-    print(bfs_count / _range)
-    print(dfs_count / _range)
-    print(iddfs_count / _range)
-    print(ggs_count / (len(heuristics) * _range))
-    print(a_star_count / (len(heuristics) * _range))
-    print(ida_count / (len(heuristics) * _range))
 
+    df = pd.DataFrame.from_dict(resp, orient="index")
+    filename = "results.csv"
+    df[["solved", "frontier_size", "nodes_expanded", "depth", "initial_pos","end_pos"]].to_csv(filename)
+    print("Results saved to:", filename)
+    time_df = pd.Series(counters) / _range
+    print(f"mean seconds taken on {_range} runs:")
+    print(time_df)
 
 if __name__ == '__main__':
-    run()
+    if sys.argv[1] == "many":
+        run_many_time()
+    else:
+        results = run()
+        pp = pprint.PrettyPrinter(indent=2)
+        pp.pprint(results.to_dict())
