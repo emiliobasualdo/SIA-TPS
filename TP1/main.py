@@ -53,13 +53,12 @@ def run(_config=None):
     return results
 
 
-def run_many_time():
+def run_many_time(board):
     counters = {**{f"ggs-{euris_name}": 0 for euris_name in heuristics.keys()},
                 **{f"a_star-{euris_name}": 0 for euris_name in heuristics.keys()},
                 **{f"ida-{euris_name}": 0 for euris_name in heuristics.keys()},
                 "bfs": 0, "dfs": 0, "iddfs": 0}
     _range = 10
-    board = "maps/easy2.txt"
     resp = {}
     for i in range(_range):
         bfs_resp = run(dict(
@@ -127,7 +126,7 @@ def run_many_time():
 if __name__ == '__main__':
     try:
         if sys.argv[1] == "many":
-            run_many_time()
+            run_many_time(sys.argv[2])
     except:
         results = run()
         pp = pprint.PrettyPrinter(indent=2)
