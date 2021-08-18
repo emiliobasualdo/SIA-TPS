@@ -2,6 +2,7 @@ from time import time
 from copy import deepcopy
 from heapq import heappop, heappush
 import bisect
+import math
 
 
 def ggs(board, results, heuristic):
@@ -34,7 +35,46 @@ def ggs(board, results, heuristic):
 
 
 def ida(board, results, heuristic):
-    pass
+    nodes_expanded = 0
+    keepLooking = True
+    initial_pos = board.player
+    frontier = [(0,board)]
+    print(heuristic)
+    bound = heuristic(frontier[0][1])
+    while keepLooking:
+        explored = set()
+        frontier = [(0,board)]
+        min_f = math.inf
+        while frontier:
+            currNode = heappop(frontier)[1]
+            explored.add(currNode)
+            if currNode.is_win():
+                results.solved = True
+                results.steps = currNode.dir_list
+                results.initial_pos = initial_pos
+                results.end_pos = currNode.player
+                results.nodes_expanded = nodes_expanded
+                results.frontier_size = len(frontier)
+                return
+            moves = currNode.moves_available()
+            currNode.fboxes = frozenset(currNode.boxes)
+            if moves:
+                nodes_expanded += 1
+                for m in moves:
+                    if m in explored:
+                        continue
+                    child = deepcopy(currNode)
+                    child.move(m)
+                    f = heuristic(child) + len(child.dir_list)
+                    if f > bound:
+                        if f < min_f:
+                            min_f = f
+                        continue
+                    heappush(frontier, (f, child))
+        bound = min_f
+
+
+
 
 
 def a_star(board, results, heuristic):
