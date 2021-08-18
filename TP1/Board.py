@@ -153,6 +153,7 @@ class Results:
             "nodes_expanded": self.nodes_expanded,
             "time_taken": self.time_taken,
             "steps" : self.steps,
+            "depth" : len(self.steps),
             "initial_pos" : self.initial_pos,
             "end_pos" : self.end_pos,
         }
