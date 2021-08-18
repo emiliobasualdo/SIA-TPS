@@ -1,6 +1,6 @@
 import math
 
-from TP1.Board import Board
+from Board import Board
 
 
 def linear_distance(node: Board):

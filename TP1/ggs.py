@@ -8,7 +8,7 @@ def ggs(board, results, heuristic):
     explored = set()
     keepLooking = True
     while keepLooking:
-        priority, currNode = heappop(frontier)
+        _, currNode = heappop(frontier)
         if currNode.is_win():
             results.solved = True
             results.nodes_expanded = nodes_expanded

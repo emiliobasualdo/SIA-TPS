@@ -3,8 +3,8 @@ from time import time
 
 from Board import load_board, Results
 
-from TP1.ggs import ggs
-from TP1.heuristics import linear_distance
+from ggs import ggs
+from heuristics import linear_distance
 from bfs import bfs, dfs, iddfs
 
 non_informed = {
