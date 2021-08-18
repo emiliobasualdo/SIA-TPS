@@ -6,8 +6,8 @@ from Board import load_board, Results
 
 from ggs import ggs
 from heuristics import linear_distance
-from bfs import bfs, dfs, iddfs
-from a_star import a_star, ida
+from non_informed import bfs, dfs, iddfs
+from informed import a_star, ida
 
 non_informed = {
     "bfs": bfs,
