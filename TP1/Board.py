@@ -105,12 +105,12 @@ class Board:
         return moves
 
     def move(self, direction):
+        self.dir_list.append((self.player, direction))
         p = self.player + direction.tile
         if p in self.boxes:
             self.boxes.remove(p)
             self.boxes.add(p + direction.tile)
         self.player = p
-        self.dir_list.append(direction)
 
     def is_win(self):
         if self.goals.issubset(self.boxes):
