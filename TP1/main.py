@@ -7,16 +7,19 @@ from Board import load_board, Results
 from ggs import ggs
 from heuristics import linear_distance
 from bfs import bfs, dfs, iddfs
+from a_star import a_star, ida
 
 non_informed = {
     "bfs": bfs,
     "dfs": dfs,
-    "iddfs": iddfs # ToDo <-- cambiar!
 }
 informed = {
     "ggs": ggs,
-    # "a_start": a_start,
-    # "ida": ida,
+    "a_start": a_star,
+}
+iteratives = {
+    "idds": iddfs,
+    "ida": ida,
 }
 heuristics = {
     "linear_distance": linear_distance
@@ -36,6 +39,10 @@ if __name__ == '__main__':
 
     if algo in non_informed:
         non_informed[algo](board, results)
+    elif algo in iterative:
+        iterative_limit = _config["iterative_limit"]
+        results.iterative_limit = iterative_limit
+        iterative[algo](board, results, iterative_limit)
     else:
         heuristic_name = _config["heuristic"]
         results.heuristic = heuristic_name

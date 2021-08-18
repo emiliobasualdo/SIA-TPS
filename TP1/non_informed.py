@@ -58,11 +58,10 @@ def dfs(board, results):
                 frontier.append(child)
 
 
-def iddfs(board, results):
+def iddfs(board, results, LIMIT_INCREASE):
     frontier = [board]
     explored = set()
     limit = 0
-    LIMIT_INCREASE = 10
     start = 0
     nodes_expanded = []
     last_level_nodes = []

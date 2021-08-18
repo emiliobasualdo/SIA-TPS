@@ -3,6 +3,8 @@ from copy import deepcopy
 from heapq import heappop, heappush
 import bisect
 
+def ida(board, results, heuristic):
+    pass
 
 def a_star(board, results, heuristic):
     nodes_expanded = 0
