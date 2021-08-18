@@ -125,9 +125,10 @@ def run_many_time():
     print(time_df)
 
 if __name__ == '__main__':
-    if sys.argv[1] == "many":
-        run_many_time()
-    else:
+    try:
+        if sys.argv[1] == "many":
+            run_many_time()
+    except:
         results = run()
         pp = pprint.PrettyPrinter(indent=2)
         pp.pprint(results.to_dict())
