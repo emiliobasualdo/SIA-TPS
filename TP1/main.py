@@ -4,24 +4,24 @@ from time import time
 
 from Board import load_board, Results
 
-from heuristics import euclidean_distance
+from heuristics import euclidean_distance, manhattan_distance, sum_of_manhattan
 from non_informed import bfs, dfs, iddfs
 from informed import a_star, ida, ggs
 
 non_informed = {
     "bfs": bfs,
     "dfs": dfs,
+    "iddfs": iddfs,
 }
 informed = {
     "ggs": ggs,
     "a_star": a_star,
-}
-iterative = {
-    "idds": iddfs,
     "ida": ida,
 }
 heuristics = {
-    "euclidean_distance": euclidean_distance
+    "euclidean_distance": euclidean_distance,
+    "manhattan_distance": manhattan_distance,
+    "sum_of_manhattan": sum_of_manhattan
 }
 
 
@@ -34,17 +34,14 @@ def run(_config=None):
     board = load_board(_config["board"])
 
     algo = _config["algorithm"]
+    iterative_limit = int(_config["iterative_limit"])
+    heuristic_name = _config["heuristic"]
+
     results = Results(algo, _config["board"])
     start = time()
-
     if algo in non_informed:
-        non_informed[algo](board, results)
-    elif algo in iterative:
-        iterative_limit = _config["iterative_limit"]
-        results.iterative_limit = iterative_limit
-        iterative[algo](board, results, iterative_limit)
+        non_informed[algo](board, results, iterative_limit)
     else:
-        heuristic_name = _config["heuristic"]
         results.heuristic = heuristic_name
         informed[algo](board, results, heuristics[heuristic_name])
 

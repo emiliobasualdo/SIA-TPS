@@ -2,7 +2,7 @@ from copy import deepcopy
 
 nodes = 0
 
-def bfs(board, results):
+def bfs(board, results, *args):
     nodes_expanded = 0
     frontier = [board]
     explored = set()
@@ -30,7 +30,7 @@ def bfs(board, results):
                 frontier.append(child)
 
 
-def dfs(board, results):
+def dfs(board, results, *args):
     nodes_expanded = 0
     frontier = [board]
     explored = set()
