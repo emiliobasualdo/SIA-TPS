@@ -1,6 +1,7 @@
 import math
 
 from Board import Board
+
 def sum_of_manhattan(node: Board):
     distance = 0
     free_boxes = node.get_free_boxes()
