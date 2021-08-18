@@ -4,10 +4,9 @@ from time import time
 
 from Board import load_board, Results
 
-from ggs import ggs
 from heuristics import linear_distance
 from non_informed import bfs, dfs, iddfs
-from informed import a_star, ida
+from informed import a_star, ida, ggs
 
 non_informed = {
     "bfs": bfs,
@@ -17,7 +16,7 @@ informed = {
     "ggs": ggs,
     "a_start": a_star,
 }
-iteratives = {
+iterative = {
     "idds": iddfs,
     "ida": ida,
 }
