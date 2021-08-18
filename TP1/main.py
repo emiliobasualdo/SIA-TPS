@@ -59,10 +59,11 @@ def run_many_time():
                 **{f"ida-{euris_name}": 0 for euris_name in heuristics.keys()},
                 "bfs": 0, "dfs": 0, "iddfs": 0}
     _range = 10
+    board = "maps/easy2.txt"
     resp = {}
     for i in range(_range):
         bfs_resp = run(dict(
-            board="maps/easy2.txt",
+            board=board,
             algorithm="bfs",
             heuristic="_",
             iterative_limit=-1
@@ -70,7 +71,7 @@ def run_many_time():
         resp["bfs"] = bfs_resp.to_dict()
         counters["bfs"] += bfs_resp.time_taken
         dfs_resp = run(dict(
-            board="maps/easy2.txt",
+            board=board,
             algorithm="dfs",
             heuristic="_",
             iterative_limit=-1
@@ -78,7 +79,7 @@ def run_many_time():
         resp["dfs"] = dfs_resp.to_dict()
         counters["dfs"] += dfs_resp.time_taken
         iddfs_resp = run(dict(
-            board="maps/easy2.txt",
+            board=board,
             algorithm="iddfs",
             heuristic="_",
             iterative_limit=10
@@ -87,7 +88,7 @@ def run_many_time():
         counters["iddfs"] += iddfs_resp.time_taken
         for euris_name in heuristics.keys():
             ggs_resp = run(dict(
-                board="maps/easy2.txt",
+                board=board,
                 algorithm="ggs",
                 heuristic=euris_name,
                 iterative_limit=-1
@@ -96,7 +97,7 @@ def run_many_time():
             resp[name] = ggs_resp.to_dict()
             counters[name] += ggs_resp.time_taken
             a_star_resp = run(dict(
-                board="maps/easy2.txt",
+                board=board,
                 algorithm="a_star",
                 heuristic=euris_name,
                 iterative_limit=-1
@@ -105,7 +106,7 @@ def run_many_time():
             resp[name] = a_star_resp.to_dict()
             counters[name] += a_star_resp.time_taken
             ida_resp = run(dict(
-                board="maps/easy2.txt",
+                board=board,
                 algorithm="ida",
                 heuristic=euris_name,
                 iterative_limit=-1
@@ -120,7 +121,7 @@ def run_many_time():
     df[["solved", "frontier_size", "nodes_expanded", "depth", "initial_pos","end_pos"]].to_csv(filename)
     print("Results saved to:", filename)
     time_df = pd.Series(counters) / _range
-    print("mean time taken:")
+    print(f"mean seconds taken on {_range} runs:")
     print(time_df)
 
 if __name__ == '__main__':
