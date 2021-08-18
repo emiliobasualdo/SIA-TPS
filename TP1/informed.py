@@ -38,14 +38,13 @@ def ida(board, results, heuristic):
     nodes_expanded = 0
     keepLooking = True
     initial_pos = board.player
-    frontier = [(0,board)]
-    bound = heuristic(frontier[0][1])
+    bound = heuristic(board)
     while keepLooking:
         explored = set()
         frontier = [(0,board)]
         min_f = math.inf
         while frontier:
-            currNode = heappop(frontier)[1]
+            _, currNode = heappop(frontier)
             explored.add(currNode)
             if currNode.is_win():
                 results.solved = True
@@ -60,16 +59,15 @@ def ida(board, results, heuristic):
             if moves:
                 nodes_expanded += 1
                 for m in moves:
-                    if m in explored:
-                        continue
                     child = deepcopy(currNode)
                     child.move(m)
-                    f = heuristic(child) + len(child.dir_list)
-                    if f > bound:
-                        if f < min_f:
-                            min_f = f
-                        continue
-                    heappush(frontier, (f, child))
+                    if child not in explored:
+                        f = heuristic(child) + len(child.dir_list)
+                        if f > bound:
+                            if f < min_f:
+                                min_f = f
+                            continue
+                        heappush(frontier, (f, child))
         bound = min_f
 
 
