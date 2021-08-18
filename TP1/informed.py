@@ -73,9 +73,6 @@ def ida(board, results, heuristic):
         bound = min_f
 
 
-
-
-
 def a_star(board, results, heuristic):
     nodes_expanded = 0
     frontier = [(0, board)]
@@ -83,7 +80,6 @@ def a_star(board, results, heuristic):
     keepLooking = True
     initial_pos = board.player
     while keepLooking:
-        heuristic(frontier[0][1])
         currNode = heappop(frontier)[1]
         if currNode.is_win():
             results.solved = True
