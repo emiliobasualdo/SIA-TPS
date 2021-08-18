@@ -1,4 +1,5 @@
 import configparser
+import pprint
 from time import time
 
 from Board import load_board, Results
@@ -36,10 +37,12 @@ if __name__ == '__main__':
     if algo in non_informed:
         non_informed[algo](board, results)
     else:
-        heuristic = heuristics[_config["heuristic"]]
-        informed[algo](board, results, heuristic)
+        heuristic_name = _config["heuristic"]
+        results.heuristic = heuristic_name
+        informed[algo](board, results, heuristics[heuristic_name])
 
     end = time()
     results.time_taken = (end-start)
-    print(results)
+    pp = pprint.PrettyPrinter(indent=2)
+    pp.pprint(results.to_dict())
 

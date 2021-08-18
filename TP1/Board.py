@@ -10,6 +10,8 @@ class Direction:
 
     def __str__(self):
         return self.char
+    def __repr__(self):
+        return self.__str__()
 
 
 class Tile:
@@ -33,6 +35,8 @@ class Tile:
 
     def __str__(self):
         return str(self.x) + ', ' + str(self.y)
+    def __repr__(self):
+        return self.__str__()
 
     def double(self):
         # usado para mirar un paso más allá del actual
@@ -131,19 +135,27 @@ class Board:
 class Results:
     def __init__(self):
         self.algorithm = None
+        self.heuristic = None
         self.solved = None
         self.frontier_size = None
         self.nodes_expanded = 0
         self.time_taken = -1
+        self.steps = []
+        self.initial_pos = None
+        self.end_pos = None
 
-    def __repr__(self):
-        return str({
+    def to_dict(self):
+        return {
             "algorithm": self.algorithm,
+            "heuristic": self.heuristic,
             "solved": self.solved,
             "frontier_size": self.frontier_size,
             "nodes_expanded": self.nodes_expanded,
             "time_taken": self.time_taken,
-        })
+            "steps" : self.steps,
+            "initial_pos" : self.initial_pos,
+            "end_pos" : self.end_pos,
+        }
 
 
 def load_board(filename):
