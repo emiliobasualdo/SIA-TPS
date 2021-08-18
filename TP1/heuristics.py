@@ -8,7 +8,7 @@ def sum_of_manhattan(node: Board):
     if len(free_boxes) == 0:
         return float("-inf")
     for box in free_boxes:
-        min_distance = 0
+        min_distance = float("inf")
         for goal in node.get_free_goals():
             aux = math.fabs(goal.x - box.x) + math.fabs(goal.y - box.y)
             if min_distance > aux:

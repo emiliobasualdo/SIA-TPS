@@ -2,6 +2,8 @@ import configparser
 import pprint
 from time import time
 
+import pandas as pd
+
 from Board import load_board, Results
 
 from heuristics import euclidean_distance, manhattan_distance, sum_of_manhattan
@@ -49,6 +51,70 @@ def run(_config=None):
     results.time_taken = (end - start)
     pp = pprint.PrettyPrinter(indent=2)
     pp.pprint(results.to_dict())
+    return results
+
+
+def run_many_time():
+    bfs_count = 0
+    dfs_count = 0
+    iddfs_count = 0
+    ggs_count = 0
+    a_star_count = 0
+    ida_count = 0
+    _range = 10
+    for i in range(_range):
+        bfs_resp = run(dict(
+            board="maps/easy2.txt",
+            algorithm="bfs",
+            heuristic="_",
+            iterative_limit=-1
+
+        ))
+        bfs_count += bfs_resp.time_taken
+        dfs_resp = run(dict(
+            board="maps/easy2.txt",
+            algorithm="dfs",
+            heuristic="_",
+            iterative_limit=-1
+        ))
+        dfs_count += dfs_resp.time_taken
+        iddfs_resp = run(dict(
+            board="maps/easy2.txt",
+            algorithm="iddfs",
+            heuristic="_",
+            iterative_limit=10
+        ))
+        iddfs_count += iddfs_resp.time_taken
+        for euris_name in heuristics.keys():
+            ggs_resp = run(dict(
+                board="maps/easy2.txt",
+                algorithm="ggs",
+                heuristic=euris_name,
+                iterative_limit=-1
+            ))
+            ggs_count += ggs_resp.time_taken
+            a_star_resp = run(dict(
+                board="maps/easy2.txt",
+                algorithm="a_star",
+                heuristic=euris_name,
+                iterative_limit=-1
+            ))
+            a_star_count += a_star_resp.time_taken
+            ida_resp = run(dict(
+                board="maps/easy2.txt",
+                algorithm="ida",
+                heuristic=euris_name,
+                iterative_limit=-1
+            ))
+            ida_count += ida_resp.time_taken
+
+    print(bfs_count / _range)
+    print(dfs_count / _range)
+    print(iddfs_count / _range)
+    print(ggs_count / (len(heuristics) * _range))
+    print(a_star_count / (len(heuristics) * _range))
+    print(ida_count / (len(heuristics) * _range))
+
 
 if __name__ == '__main__':
     run()
