@@ -34,7 +34,7 @@ class Tile:
         return hash((self.x, self.y))
 
     def __str__(self):
-        return str(self.x) + ', ' + str(self.y)
+        return "(" + str(self.x) + ', ' + str(self.y) + ")"
     def __repr__(self):
         return self.__str__()
 
@@ -105,12 +105,12 @@ class Board:
         return moves
 
     def move(self, direction):
+        self.dir_list.append((self.player, direction))
         p = self.player + direction.tile
         if p in self.boxes:
             self.boxes.remove(p)
             self.boxes.add(p + direction.tile)
         self.player = p
-        self.dir_list.append(direction)
 
     def is_win(self):
         if self.goals.issubset(self.boxes):
@@ -153,6 +153,7 @@ class Results:
             "nodes_expanded": self.nodes_expanded,
             "time_taken": self.time_taken,
             "steps" : self.steps,
+            "depth" : len(self.steps),
             "initial_pos" : self.initial_pos,
             "end_pos" : self.end_pos,
         }
@@ -178,9 +179,6 @@ def load_board(filename):
                 b.set_player(x, y)
             elif char == '$':
                 b.add_box(x, y)
-            elif char == '*':
-                b.add_box(x, y)
-                b.add_goal(x, y)
             x += 1
         y += 1
         x = 0
