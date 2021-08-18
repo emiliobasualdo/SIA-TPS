@@ -7,10 +7,14 @@ def bfs(board, results):
     frontier = [board]
     explored = set()
     keepLooking = True
+    initial_pos = board.player
     while keepLooking:
         currNode = frontier.pop(0)
         if currNode.is_win():
             results.solved = True
+            results.steps = currNode.dir_list
+            results.initial_pos = initial_pos
+            results.end_pos = currNode.player
             results.nodes_expanded = nodes_expanded
             results.frontier_size = len(frontier)
             return
@@ -31,10 +35,14 @@ def dfs(board, results):
     frontier = [board]
     explored = set()
     keepLooking = True
+    initial_pos = board.player
     while keepLooking:
         currNode = frontier.pop()
         if currNode.is_win():
             results.solved = True
+            results.steps = currNode.dir_list
+            results.initial_pos = initial_pos
+            results.end_pos = currNode.player
             results.nodes_expanded = nodes_expanded
             results.frontier_size = len(frontier)
             return
@@ -58,6 +66,7 @@ def iddfs(board, results):
     start = 0
     nodes_expanded = []
     last_level_nodes = []
+    results.initial_pos = board.player
     while True:
         while frontier:
             result = iddfs_rec(start, limit, frontier, results, nodes_expanded, last_level_nodes, explored)
@@ -82,6 +91,8 @@ def iddfs_rec(start, limit, frontier, results, nodes_expanded, last_level_nodes,
 
     if currNode.is_win():
         results.solved = True
+        results.steps = currNode.dir_list
+        results.end_pos = currNode.player
         results.nodes_expanded = len(nodes_expanded)
         results.frontier_size = len(frontier)
         return currNode
