@@ -100,7 +100,6 @@ def iddfs_rec(start, limit, frontier, results, nodes_expanded, last_level_nodes,
     moves = currNode.moves_available()
     currNode.fboxes = frozenset(currNode.boxes)
     explored.add(currNode)
-
     for m in moves:
         child = deepcopy(currNode)
         child.move(m)

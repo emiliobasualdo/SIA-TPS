@@ -1,13 +1,10 @@
-,solved,frontier_size,nodes_expanded,depth,initial_pos,end_pos
-bfs,True,82,280,9,"(2, 3)","(2, 2)"
-dfs,True,19,223,25,"(2, 3)","(2, 2)"
-iddfs,True,46,227,13,"(2, 3)","(2, 2)"
-ggs-euclidean_distance,True,23,27,11,"(2, 3)","(2, 2)"
-a_star-euclidean_distance,True,19,42,11,"(2, 3)","(2, 2)"
-ida-euclidean_distance,True,8,69,11,"(2, 3)","(2, 2)"
-ggs-manhattan_distance,True,23,27,11,"(2, 3)","(2, 2)"
-a_star-manhattan_distance,True,36,54,9,"(2, 3)","(2, 2)"
-ida-manhattan_distance,True,0,163,9,"(2, 3)","(2, 2)"
-ggs-sum_of_manhattan,True,23,27,11,"(2, 3)","(2, 2)"
-a_star-sum_of_manhattan,True,36,54,9,"(2, 3)","(2, 2)"
-ida-sum_of_manhattan,True,0,163,9,"(2, 3)","(2, 2)"
+,solved,frontier_size,nodes_expanded,depth
+bfs,True,123,7491,97
+dfs,True,61,2232,247
+iddfs,True,23,4622,109
+ggs-euclidean_distance,True,68,4088,105
+a_star-euclidean_distance,True,54,8281,101
+ggs-manhattan_distance,True,54,4717,107
+a_star-manhattan_distance,True,127,7087,97
+ggs-sum_of_manhattan,True,50,2871,103
+a_star-sum_of_manhattan,True,132,6863,97
