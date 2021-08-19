@@ -6,7 +6,7 @@ def sum_of_manhattan(node: Board):
     distance = 0
     free_boxes = node.get_free_boxes()
     if len(free_boxes) == 0:
-        return float("-inf")
+        return 0
     for box in free_boxes:
         min_distance = float("inf")
         for goal in node.get_free_goals():
@@ -20,7 +20,7 @@ def manhattan_distance(node: Board):
     min_distance = float("inf")
     free_boxes = node.get_free_boxes()
     if len(free_boxes) == 0:
-        return float("-inf")
+        return 0
     for box in free_boxes:
         for goal in node.get_free_goals():
             aux = math.fabs(goal.x - box.x) + math.fabs(goal.y - box.y)
@@ -32,7 +32,7 @@ def euclidean_distance(node: Board):
     min_distance = float("inf")
     free_boxes = node.get_free_boxes()
     if len(free_boxes) == 0:
-        return float("-inf")
+        return 0
     for box in free_boxes:
         for goal in node.get_free_goals():
             aux = (goal.x - box.x) ** 2 + (goal.y - box.y) ** 2
