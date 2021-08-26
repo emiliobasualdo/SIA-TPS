@@ -1,0 +1,7 @@
+- Asumimos que los archivos siempre se van a llamar armas, botas, cascos, etc?
+- Hay variable cantidad de items? Pregunto para saber cómo representan al player
+- Es necesario trabajar con binarios?
+- Cómo determinamos k?
+- Agarramos los padres siempre de a pares?
+- Cómo mezclamos las alturas y los tipos de personajes?
+- Ex en el csv es pericia
