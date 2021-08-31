@@ -45,6 +45,7 @@ class Player:
     PECHERA = 4
     HEIGHT = 5
     CHARACTER = 6
+    ATTR_LEN = 7
 
     def __init__(self, arma: int, bota: int, casco: int, guante: int, pechera: int, h: float, character: str):
         self.attrs = [arma, bota, casco, guante, pechera, h, character]
