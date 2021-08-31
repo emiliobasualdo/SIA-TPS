@@ -1,20 +1,35 @@
+import math
 import random
-
 
 from Player import Player
 
-def random_selection(players: [Player], k: int) -> [Player]:
+
+def random_sel(players: [Player], k: int) -> [Player]:
     selection = []
     for i in range(k):
-        selected = players[random.randint(0, len(players)-1)].copy()
+        selected = players[random.randint(0, len(players) - 1)].copy()
         selection.append(selected)
     return selection
 
 
-def elite_selection(players: [Player], k: int) -> [Player]:
-    raise NotImplemented()
+def _sorter(p: Player):
+    return p.fitness
 
-def roulette_selection(players: [Player], k: int) -> [Player]:
+
+def elite(players: [Player], k: int) -> [Player]:
+    selection = []
+    players.sort(key=_sorter, reverse=True)
+    N = len(players)
+    for i in range(len(players)):
+        if k-i <= 0:
+            break
+        p_count = math.ceil((k-i)/N)
+        for _ in range(p_count):
+            selection.append(players[i].copy())
+    return selection
+
+
+def roulette(players: [Player], k: int) -> [Player]:
     population_fitness = 0
     r = 0
     selection = []
@@ -28,15 +43,16 @@ def roulette_selection(players: [Player], k: int) -> [Player]:
         player_accumulative_fitness.append((accumulative_fitness, player))
     for i in range(k):
         r = random.uniform(0, 1)
-        for j in range((len(player_accumulative_fitness)-1)):
+        for j in range((len(player_accumulative_fitness) - 1)):
             lower_value = player_accumulative_fitness[j][0]
-            upper_value = player_accumulative_fitness[j+1][0]
+            upper_value = player_accumulative_fitness[j + 1][0]
 
             if lower_value <= r <= upper_value:
-                selection.append(player_accumulative_fitness[j+1][1])
+                selection.append(player_accumulative_fitness[j + 1][1])
     return selection
 
-def universal_selection(players: [Player], k: int) -> [Player]:
+
+def universal(players: [Player], k: int) -> [Player]:
     population_fitness = 0
     r = 0
     selection = []
@@ -59,5 +75,4 @@ def universal_selection(players: [Player], k: int) -> [Player]:
                 selection.append(player_accumulative_fitness[j + 1][1])
     return selection
 
-#retocar roulette y universal
-
+# retocar roulette y universal

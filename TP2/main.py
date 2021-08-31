@@ -11,41 +11,34 @@ import websockets
 pd.options.plotting.backend = "plotly"
 from Player import items, set_item, rand_player, Player
 from cross_over_methods import one_point, two_points, anular, uniform
-from mutation_methods import single_gen
-from selection_methods import random_selection, elite_selection, roulette_selection
+from mutation_methods import single_gen, multi_gen_lim, multi_gen_uni
+from selection_methods import random_sel, elite, roulette, universal
 
 _config = configparser.ConfigParser()
 
-MAX_ROWS = 100  # todo <--- borrar cuando terminamos
-MAX_ITERATIONS = 1000  # todo <--- borrar cuando terminamos
+MAX_ITEMS = 10000  # todo <--- borrar cuando terminamos
+MAX_ITERATIONS = 500  # todo <--- borrar cuando terminamos
 
 selection_methods = {
-    "random": random_selection,
-    "elite": elite_selection,
-    "roulette_selection": roulette_selection,
+    "random": random_sel,
+    "elite": elite,
+    "universal": universal,
+    "roulette": roulette,
 }
-cross_over_methods = {
-    "one_point": one_point,
-    "two_points": two_points,
-    "anular": anular,
-    "uniform": uniform,
-}
-mutation_methods = {
-    "single_gen": single_gen,
-}
-def calculate_stats(players: [Player]):
+
+def calculate_stats(generation: [Player]):
     min_fitness = float("inf")
     max_fitness = 0
     avg_fitness = 0
 
-    for player in players:
+    for player in generation:
         avg_fitness += player.fitness
         if min_fitness > player.fitness:
             min_fitness = player.fitness
         if max_fitness < player.fitness:
             max_fitness = player.fitness
-    if len(players):
-        avg_fitness /= len(players)
+    if len(generation):
+        avg_fitness /= len(generation)
     return min_fitness, avg_fitness, max_fitness
 
 async def main(websocket, path):
@@ -56,71 +49,90 @@ async def main(websocket, path):
         random.seed(int(config["seed"]))
 
     # cargamos los items
-    print("Cargando items")
+    print(f"Cargando {MAX_ITEMS} items")
     items_dir = config["items_directory"]
     for key in items.keys():
         set_item(key,
-                 pd.read_csv(os.path.join(items_dir, f'{key}.tsv'), index_col="id", sep="\t", header=0, nrows=MAX_ROWS))
+                 pd.read_csv(os.path.join(items_dir, f'{key}.tsv'), index_col="id", sep="\t", header=0, nrows=MAX_ITEMS))
 
-    # creamos los players random
+    # creamos los generation random
     N = int(config["N"])
+    k = int(config["k"])
     min_h = float(config["min_h"])
     max_h = float(config["max_h"])
-    print(f"Creando players N={N} player")
-    players = []
+    print(f"Creando generation N={N} player")
+    generation = []
     for i in range(N):
-        players.append(rand_player(min_h, max_h))
+        generation.append(rand_player(min_h, max_h))
 
     # generamos las funciones según config
     sel_config = _config["SELECTION"]
     selection_method = selection_methods[sel_config["method"]]
-    delta_k = int(sel_config["delta_k"])
-    selection = lambda pls: selection_method(pls, len(pls) + delta_k)
+    selection = lambda pls: selection_method(pls, k)
 
     co_config = _config["CROSS_OVER"]
-    cross_over_method = cross_over_methods[co_config["method"]]
-    if cross_over_method == one_point:
+    cross_over_method = co_config["method"]
+    if cross_over_method == "one_point":
         point = int(co_config["point"])
         assert 0 <= point <= 6
-        cross_over = lambda pls: cross_over_method(pls, point)
-    elif cross_over_method == two_points:
+        cross_over = lambda pls: one_point(pls, point)
+    elif cross_over_method == "two_points":
         points = co_config["points"].split(",")
         point_1 = int(points[0])
         point_2 = int(points[1])
         assert 0 <= point_1 < point_2 <= Player.ATTR_LEN-1
-        cross_over = lambda pls: cross_over_method(pls, point_1, point_2)
-    elif cross_over_method == anular:
+        cross_over = lambda pls: two_points(pls, point_1, point_2)
+    elif cross_over_method == "anular":
         point = int(co_config["point"])
         length = int(co_config["length"])
         assert 0 <= point + length <= Player.ATTR_LEN-1
-        cross_over = lambda pls: cross_over_method(pls, point, length)
-    elif cross_over_method == uniform:
-        cross_over = lambda pls: cross_over_method(pls)
+        cross_over = lambda pls: anular(pls, point, length)
+    elif cross_over_method == "uniform":
+        cross_over = uniform
+    else:
+        raise AttributeError(f"No such CrossOver method {cross_over_method}")
 
     mu_config = _config["MUTATION"]
-    mutation = mutation_methods[mu_config["method"]]
+    mutation_method = mu_config["method"]
+    if mutation_method == "single_gen":
+        mutation = single_gen
+    elif mutation_method == "multi_gen_uni":
+        mutation = multi_gen_uni
+    elif mutation_method == "multi_gen_lim":
+        M = int(mu_config["M"])
+        mutation = lambda pls: multi_gen_lim(pls, M)
+    else:
+        raise AttributeError(f"No such Mutation method {cross_over_method}")
+
 
     new_sel_config = _config["NEW_GEN_SELECTION"]
     new_generation_selection_method = selection_methods[new_sel_config["method"]]
-    new_delta_k = int(new_sel_config["delta_k"])
-    new_generation_selection = lambda pls: new_generation_selection_method(pls, len(pls) + new_delta_k)
+    fill = new_sel_config["fill"]
+    if fill == "all":
+        new_generation_selection = lambda k_parents, k_kids: new_generation_selection_method(k_parents + k_kids, N)
+    else:
+        if k >= N:
+            new_generation_selection = lambda k_parents, k_kids: new_generation_selection_method(k_kids, N)
+        else:
+            new_generation_selection = lambda k_parents, k_kids: k_kids + new_generation_selection_method(k_parents, N - k)
 
     # iteramos
-    print("Iterando por el conjunto")
+    print(f"Iterando {MAX_ITERATIONS} veces")
     for i in range(MAX_ITERATIONS):
         if i % 5 == 0:
-            min_f, avg_f, max_f = calculate_stats(players)
-            await websocket.send(json.dumps((i, min_f, avg_f, max_f, len(players))))
-        cross_over(selection(players))
-        mutation(players)
-        players = new_generation_selection(players)
+            min_f, avg_f, max_f = calculate_stats(generation)
+            await websocket.send(json.dumps((i, min_f, avg_f, max_f, len(generation))))
+        k_parents = selection(generation)
+        k_kids = cross_over(k_parents)
+        mutation(k_kids)
+        generation = new_generation_selection(k_parents, k_kids)
 
-    res_df = pd.DataFrame().from_records(players,
+    res_df = pd.DataFrame().from_records(generation,
                                 columns=["armas", "botas", "cascos", "guantes", "pecheras", "height", "character", "fitness"])
     print("Listo")
     if config["graphs"] == "true":
-        fig = px.box(res_df[["character", "fitness"]], x="character", y="fitness")
-        fig.show()
+        px.box(res_df[["character", "fitness"]], x="character", y="fitness").show()
+        px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
 
 
 class Ws_mock:

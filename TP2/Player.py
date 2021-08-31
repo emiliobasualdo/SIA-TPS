@@ -45,19 +45,25 @@ class Player:
     PECHERA = 4
     HEIGHT = 5
     CHARACTER = 6
+
     ATTR_LEN = 7
+    ITEMS_LEN = 5
 
     def __init__(self, arma: int, bota: int, casco: int, guante: int, pechera: int, h: float, character: str):
         self.attrs = [arma, bota, casco, guante, pechera, h, character]
         # calculamos el fitness
-        atm = 0.7 - (3*h - 5)**4 + (3*h - 5)**2 + h/4
-        dem = 1.9 + (2.5*h - 4.16)**4 - (2.5*h - 4.16)**2 - 3*h/10
+        self.fitness = self.calculate_fitness()
+
+    def calculate_fitness(self):
+        arma, bota, casco, guante, pechera, h, character = self.attrs
+        atm = 0.7 - (3 * h - 5) ** 4 + (3 * h - 5) ** 2 + h / 4
+        dem = 1.9 + (2.5 * h - 4.16) ** 4 - (2.5 * h - 4.16) ** 2 - 3 * h / 10
         fue = 0
         agi = 0
         per = 0
         res = 0
         vid = 0
-        for index, item_id in enumerate(self.attrs[0:5]):
+        for index, item_id in enumerate(self.attrs[0:Player.ITEMS_LEN]):
             item_scores = items[item_indexes[index]].iloc[item_id]
             fue += item_scores["Fu"]
             agi += item_scores["Ag"]
@@ -74,10 +80,11 @@ class Player:
         a = (agi + per) * fue * atm
         d = (res + per) * vid * dem
 
-        self.fitness = fitness_funcs[character](a, d)
+        return fitness_funcs[character](a, d)
 
     def set_item(self, index, item_value):
         self.attrs[index] = item_value
+        self.fitness = self.calculate_fitness()
 
     def copy(self):
         return Player(*self.attrs)

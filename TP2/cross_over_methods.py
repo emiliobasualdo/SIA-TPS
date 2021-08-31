@@ -11,7 +11,7 @@ def one_point(players: [Player], point: int):
         new_born.append(new_p)
         new_p = Player(*players[i + 1].attrs[0:point], *players[i].attrs[point:])
         new_born.append(new_p)
-    players.extend(new_born)
+    return new_born
 
 
 def two_points(players: [Player], point_1: int, point_2: int):
@@ -26,7 +26,7 @@ def two_points(players: [Player], point_1: int, point_2: int):
                        *players[i].attrs[point_1:point_2],
                        *players[i + 1].attrs[point_2:])
         new_born.append(new_p)
-    players.extend(new_born)
+    return new_born
 
 
 def anular(players: [Player], point: int, length: int):
@@ -41,13 +41,20 @@ def anular(players: [Player], point: int, length: int):
                        *players[i].attrs[point:point + length],
                        *players[i + 1].attrs[point + length:])
         new_born.append(new_p)
-    players.extend(new_born)
+    return new_born
 
 def uniform(players: [Player]):
+    new_born = []
     for i in range(int(len(players) / 2)):
-        new_genes = [-1] * Player.ATTR_LEN
+        new_genes_1 = [-1] * Player.ATTR_LEN
+        new_genes_2 = [-1] * Player.ATTR_LEN
         for j in range(Player.ATTR_LEN):
             if random.uniform(0, 1) < 0.5:
-                new_genes[j] = players[i].attrs[j]
+                new_genes_1[j] = players[i].attrs[j]
+                new_genes_2[j] = players[i+1].attrs[j]
             else:
-                new_genes[j] = players[i+1].attrs[j]
+                new_genes_1[j] = players[i+1].attrs[j]
+                new_genes_2[j] = players[i].attrs[j]
+        new_born.append(Player(*new_genes_1))
+        new_born.append(Player(*new_genes_2))
+    return new_born
