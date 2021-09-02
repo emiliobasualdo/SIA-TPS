@@ -1,6 +1,6 @@
 import math
 import random
-
+import copy
 from Player import Player
 
 
@@ -75,4 +75,25 @@ def universal(players: [Player], k: int) -> [Player]:
                 selection.append(player_accumulative_fitness[j + 1][1])
     return selection
 
-# retocar roulette y universal
+def ranking(players: [Player], k: int, population: int) -> [Player]:
+    selection = []
+    ranked_players = []
+    players.sort(key=_sorter, reverse=True)
+    for i, player in enumerate(players):
+        new_fitness = (population - i) / population
+        ranked_player = copy.deepcopy(player)
+        ranked_player.fitness = new_fitness
+        ranked_players.append(ranked_player)
+
+    ranked_players = roulette(ranked_players, k)
+    for ranked_player in enumerate(ranked_players):
+        for player in enumerate(players):
+            if player.idd == ranked_player.idd:
+                selection.append(player)
+                break
+
+    return selection
+
+def deterministic_tournament(players: [Player], k: int, population: int) -> [Player]:
+        raise NotImplemented
+#retocar roulette y universal
