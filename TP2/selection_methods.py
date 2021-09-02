@@ -105,8 +105,26 @@ def deterministic_tournament(players: [Player], k: int, population: int, m: int)
         selection.append(first_selection)
     return selection
 
-def probabilistic_tournament(players: [Player], k: int, population: int, m: int) -> [Player]:
+def probabilistic_tournament(players: [Player], k: int, population: int, m: int, threshold: float) -> [Player]:
     selection = []
+    for i in range(k):
+        first_selection = players[random.randint(0, population - 1)].copy()
+        second_selection = players[random.randint(0, population - 1)].copy()
+        r = random.uniform(0, 1)
+        if r < threshold:
+            if first_selection.fitness > second_selection.fitness:
+                selection.append(first_selection)
+            else:
+                selection.append(second_selection)
+
+        else:
+            if first_selection.fitness < second_selection.fitness:
+                selection.append(first_selection)
+            else:
+                selection.append(second_selection)
+
+    return selection
+
 
 def boltzmann(players: [Player], k: int, population: int, gen: int, t0: int, tc: int, kbol: int) -> [Player]:
 	selection = []
