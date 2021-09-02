@@ -94,6 +94,19 @@ def ranking(players: [Player], k: int, population: int) -> [Player]:
 
     return selection
 
-def deterministic_tournament(players: [Player], k: int, population: int) -> [Player]:
-        raise NotImplemented
+def deterministic_tournament(players: [Player], k: int, population: int, m: int) -> [Player]:
+    selection = []
+    for i in range(k):
+        first_selection = players[random.randint(0, population - 1)].copy()
+        for j in range(m):
+            m_selection = players[random.randint(0, population - 1)].copy()
+            if m_selection.fitness > first_selection.fitness:
+                first_selection = m_selection
+        selection.append(first_selection)
+    return selection
+
+def probabilistic_tournament(players: [Player], k: int, population: int, m: int) -> [Player]:
+    selection = []
+
+
 #retocar roulette y universal
