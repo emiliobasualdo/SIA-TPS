@@ -1,4 +1,5 @@
 
+
 def gen_quantity(condition: int, generation_number: int):
     if generation_number >= condition:
         return True;

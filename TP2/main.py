@@ -125,14 +125,11 @@ async def main(websocket, path):
             new_generation_selection = lambda k_parents, k_kids: k_kids + new_generation_selection_method2(k_parents, math.floor((N - k)*B)) + new_generation_selection_method2(k_parents, math.floor((N - k)*(1-B)))
 
     # iteramos
-    max_iterations = int(config["max_iterations"])
     condition = None
     gen = 0
 
     stop_condition_method = config["stop_condition"]
-    if stop_condition_method == "max_iterations":
-        stop_condition = lambda maxf,gene,timer: False
-    elif stop_condition_method == "gen_quantity":
+    if stop_condition_method == "gen_quantity":
         condition = int(config["gen_quantity"])
         stop_condition = lambda maxf,gene,timer: gen_quantity(gene,condition)
     elif stop_condition_method == "time":
@@ -145,11 +142,10 @@ async def main(websocket, path):
     else:
         raise AttributeError(f"No such Stop Condition method {stop_condition_method}")
 
-    print(f"Iterando {max_iterations} veces")
+    print(f"Iterando")
     stop_condition_met = False
     start_timer = time.clock()
-    for i in range(max_iterations):
-
+    while not stop_condition(max_f,gen,current_time):
         if i % 5 == 0:
             current_time = time.clock() - start_timer
             gen = gen + 5
