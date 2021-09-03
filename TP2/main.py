@@ -17,9 +17,6 @@ from selection_methods import random_sel, elite, roulette, universal
 
 _config = configparser.ConfigParser()
 
-MAX_ITEMS = 10000  # todo <--- borrar cuando terminamos
-MAX_ITERATIONS = 500  # todo <--- borrar cuando terminamos
-
 selection_methods = {
     "random": random_sel,
     "elite": elite,
@@ -50,11 +47,11 @@ async def main(websocket, path):
         random.seed(int(config["seed"]))
 
     # cargamos los items
-    print(f"Cargando {MAX_ITEMS} items")
+    print(f"Cargando items")
     items_dir = config["items_directory"]
     for key in items.keys():
         set_item(key,
-                 pd.read_csv(os.path.join(items_dir, f'{key}.tsv'), index_col="id", sep="\t", header=0, nrows=MAX_ITEMS))
+                 pd.read_csv(os.path.join(items_dir, f'{key}.tsv'), index_col="id", sep="\t", header=0))
 
     # creamos los generation random
     N = int(config["N"])
@@ -116,11 +113,22 @@ async def main(websocket, path):
             new_generation_selection = lambda k_parents, k_kids: k_kids + new_generation_selection_method2(k_parents, math.floor((N - k)*B)) + new_generation_selection_method2(k_parents, math.floor((N - k)*(1-B)))
 
     # iteramos
-    print(f"Iterando {MAX_ITERATIONS} veces")
-    for i in range(MAX_ITERATIONS):
+    max_iterations = int(config["max_iterations"])
+    stop_condition_method = config["stop_condition"]
+    if stop_condition_method == "max_iterations":
+        stop_condition = lambda pls: False
+    else:
+        raise AttributeError(f"No such Stop Condition method {stop_condition_method}")
+
+    print(f"Iterando {max_iterations} veces")
+    stop_condition_met = False
+    for i in range(max_iterations):
         if i % 5 == 0:
             min_f, avg_f, max_f = calculate_stats(generation)
             await websocket.send(json.dumps((i, min_f, avg_f, max_f, len(generation))))
+            if stop_condition(generation):
+                stop_condition_met = True
+                break
         k_parents = selection(generation)
         k_kids = cross_over(k_parents)
         mutation(k_kids)
@@ -128,7 +136,7 @@ async def main(websocket, path):
 
     res_df = pd.DataFrame().from_records(generation,
                                 columns=["armas", "botas", "cascos", "guantes", "pecheras", "height", "fitness"])
-    print("Listo")
+    print(f"Stop_condition_met = {stop_condition_met}")
     if config["graphs"] == "true":
         #px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
         #px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
