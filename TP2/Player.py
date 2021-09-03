@@ -58,12 +58,12 @@ class Player:
         self.fitness = self.calculate_fitness()
         global idd
         self.id = idd
-        idd+= 1
+        idd += 1
 
     def calculate_fitness(self):
         arma, bota, casco, guante, pechera, h = self.attrs
-        atm = 0.7 - ((3 * h - 5) ** 4) + ((3 * h - 5) ** 2) + (h / 4)
-        dem = 1.9 + ((2.5 * h - 4.16) ** 4) - ((2.5 * h - 4.16) ** 2) - (3 * h / 10)
+        atm = 0.7 - math.pow(3 * h - 5, 4) + math.pow(3 * h - 5, 2) + (h / 4)
+        dem = 1.9 + math.pow(2.5 * h - 4.16, 4) - math.pow(2.5 * h - 4.16, 2) - (3 * h / 10)
         fue = 0
         agi = 0
         per = 0
@@ -86,7 +86,7 @@ class Player:
         a = (agi + per) * fue * atm
         d = (res + per) * vid * dem
 
-        return self.fitness_func(a,d)
+        return self.fitness_func(a, d)
 
     def set_item(self, index, item_value):
         self.attrs[index] = item_value

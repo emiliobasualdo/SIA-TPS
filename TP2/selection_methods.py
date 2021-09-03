@@ -86,8 +86,8 @@ def ranking(players: [Player], k: int, population: int) -> [Player]:
         ranked_players.append(ranked_player)
 
     ranked_players = roulette(ranked_players, k)
-    for ranked_player in enumerate(ranked_players):
-        for player in enumerate(players):
+    for ranked_player in ranked_players:
+        for player in players:
             if player.idd == ranked_player.idd:
                 selection.append(player)
                 break
@@ -127,23 +127,23 @@ def probabilistic_tournament(players: [Player], k: int, population: int, m: int,
 
 
 def boltzmann(players: [Player], k: int, population: int, gen: int, t0: int, tc: int, kbol: int) -> [Player]:
-	selection = []
-	ranked_players = []
-	val = tc + (t0 - tc) * math.exp(-kbol * gen)
-	population_average = sum(list(map(lambda player: math.exp(player.fitness/val), players)))/len(players)
-	for i, player in enumerate(players):
-		new_fitness = math.exp(player.fitness/val)/population_average
-		ranked_player = copy.deepcopy(player)
+    selection = []
+    ranked_players = []
+    val = tc + (t0 - tc) * math.exp(-kbol * gen)
+    population_average = sum(list(map(lambda player: math.exp(player.fitness/val), players)))/len(players)
+    for i, player in enumerate(players):
+        new_fitness = math.exp(player.fitness/val)/population_average
+        ranked_player = copy.deepcopy(player)
         ranked_player.fitness = new_fitness
         ranked_players.append(ranked_player)
 
-	ranked_players = roulette(ranked_players, k)
-	for ranked_player in enumerate(ranked_players):
-		for player in enumerate(players):
-			if player.idd == ranked_player.idd:
-				selection.append(player)
-				break
+    ranked_players = roulette(ranked_players, k)
+    for ranked_player in ranked_players:
+        for player in players:
+            if player.idd == ranked_player.idd:
+                selection.append(player)
+                break
 
-	return selection
+    return selection
 
 #retocar roulette y universal

@@ -78,20 +78,11 @@ async def main(websocket, path):
     co_config = _config["CROSS_OVER"]
     cross_over_method = co_config["method"]
     if cross_over_method == "one_point":
-        point = int(co_config["point"])
-        assert 0 <= point <= 6
-        cross_over = lambda pls: one_point(pls, point)
+        cross_over = one_point
     elif cross_over_method == "two_points":
-        points = co_config["points"].split(",")
-        point_1 = int(points[0])
-        point_2 = int(points[1])
-        assert 0 <= point_1 < point_2 <= Player.ATTR_LEN-1
-        cross_over = lambda pls: two_points(pls, point_1, point_2)
+        cross_over = two_points
     elif cross_over_method == "anular":
-        point = int(co_config["point"])
-        length = int(co_config["length"])
-        assert 0 <= point + length <= Player.ATTR_LEN-1
-        cross_over = lambda pls: anular(pls, point, length)
+        cross_over = anular
     elif cross_over_method == "uniform":
         cross_over = uniform
     else:
@@ -99,13 +90,14 @@ async def main(websocket, path):
 
     mu_config = _config["MUTATION"]
     mutation_method = mu_config["method"]
+    Pm = float(mu_config["Pm"])
     if mutation_method == "single_gen":
-        mutation = single_gen
+        mutation = lambda pls: single_gen(pls, Pm)
     elif mutation_method == "multi_gen_uni":
-        mutation = multi_gen_uni
+        mutation = lambda pls: multi_gen_uni(pls, Pm)
     elif mutation_method == "multi_gen_lim":
         M = int(mu_config["M"])
-        mutation = lambda pls: multi_gen_lim(pls, M)
+        mutation = lambda pls: multi_gen_lim(pls, M, Pm)
     else:
         raise AttributeError(f"No such Mutation method {cross_over_method}")
 
