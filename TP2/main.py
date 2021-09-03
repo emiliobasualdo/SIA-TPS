@@ -3,8 +3,11 @@ import json
 import math
 import os
 import random
+from datetime import datetime
+
 import pandas as pd
 import plotly.express as px
+import time
 
 import asyncio
 import websockets
@@ -14,6 +17,7 @@ from Player import items, set_item, Player, characters
 from cross_over_methods import one_point, two_points, anular, uniform
 from mutation_methods import single_gen, multi_gen_lim, multi_gen_uni, complete_mutation
 from selection_methods import random_sel, elite, roulette, universal, ranking, det_tourn, prob_tourn, boltzmann
+from break_methods import gen_quantity, fitness_goal, stop_by_time
 
 _config = configparser.ConfigParser()
 
@@ -40,7 +44,6 @@ def _mu_method(config):
         raise AttributeError(f"No such Mutation method {mutation_method}")
     return mutation
 
-
 def _cross_over_method(config):
     cross_over_method = config["method"]
     if cross_over_method == "one_point":
@@ -55,7 +58,6 @@ def _cross_over_method(config):
     else:
         raise AttributeError(f"No such CrossOver method {cross_over_method}")
     return cross_over
-
 
 def _selection_method(config, N: int, k: int):
     def get_method(method_name, config):
@@ -148,25 +150,33 @@ async def main(websocket, path):
     new_generation_selection = _selection_method(_config["NEW_GEN_SELECTION"], N, k)
 
     # iteramos
-    max_iterations = int(config["max_iterations"])
-    stop_condition_method = config["stop_condition"]
-    if stop_condition_method == "max_iterations":
-        stop_condition = lambda pls: False
+    stop_config = _config["STOP_CONDITION"]
+    stop_condition_method = stop_config["stop_condition"]
+    if stop_condition_method == "gen_quantity":
+        condition = int(stop_config["gen_quantity"])
+        stop_condition = lambda maxf,gene,timer: gen_quantity(condition, gene)
+    elif stop_condition_method == "time":
+        condition = float(stop_config["time"])
+        stop_condition = lambda maxf,gene,timer: stop_by_time(condition, timer)
+    elif stop_condition_method =="fitness_goal":
+        condition = float(stop_config["fitness_goal"])
+        stop_condition = lambda maxf,gene,timer: fitness_goal(condition, maxf)
     else:
         raise AttributeError(f"No such Stop Condition method {stop_condition_method}")
 
-    print(f"Iterando {max_iterations} veces")
+    print(f"Iterando")
     stop_condition_met = False
     historical_stats = []
-    for i in range(max_iterations):
+    start_timer = datetime.now()
+    max_f = 0
+    i = 0
+    while not stop_condition(max_f, i, (datetime.now()-start_timer).seconds):
         if i % 5 == 0:
             min_f, avg_f, max_f = calculate_stats(generation)
             stats = (i, min_f, avg_f, max_f, len(generation))
             historical_stats.append(stats)
             await websocket.send(json.dumps(stats))
-            if stop_condition(generation):
-                stop_condition_met = True
-                break
+        i += 1
         k_parents = selection(generation)
         k_kids = cross_over(k_parents)
         mutation(k_kids)
@@ -179,11 +189,10 @@ async def main(websocket, path):
     print(f"Stop_condition_met = {stop_condition_met}")
     if config["graphs"] == "true":
         #px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
-        #px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
         top = res_df.nlargest(10, ["fitness"], keep="all")
         print(top)
         px.scatter(top, x="height", y="fitness").show()
-        # params = f"Character:{char_class}, N:{N}, k={k}, max iterations:{max_iterations}, stop condition:{stop_condition} <br>"
+        # params = f"Character:{char_class}, N:{N}, k={k}, stop condition:{stop_condition} <br>"
         # for conf_section in ["SELECTION", "CROSS_OVER", "MUTATION", "NEW_GEN_SELECTION"]:
         #     params += "("
         #     for k,v in _config[conf_section].items():
