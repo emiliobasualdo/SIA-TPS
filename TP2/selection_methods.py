@@ -2,7 +2,10 @@ import math
 import random
 import copy
 from Player import Player
+from scipy.constants import k as kbol
 
+def _sorter(p: Player):
+    return p.fitness
 
 def random_sel(players: [Player], k: int) -> [Player]:
     selection = []
@@ -10,11 +13,6 @@ def random_sel(players: [Player], k: int) -> [Player]:
         selected = players[random.randint(0, len(players) - 1)].copy()
         selection.append(selected)
     return selection
-
-
-def _sorter(p: Player):
-    return p.fitness
-
 
 def elite(players: [Player], k: int) -> [Player]:
     selection = []
@@ -27,7 +25,6 @@ def elite(players: [Player], k: int) -> [Player]:
         for _ in range(p_count):
             selection.append(players[i].copy())
     return selection
-
 
 def roulette(players: [Player], k: int) -> [Player]:
     population_fitness = 0
@@ -50,7 +47,6 @@ def roulette(players: [Player], k: int) -> [Player]:
             if lower_value <= r <= upper_value:
                 selection.append(player_accumulative_fitness[j + 1][1])
     return selection
-
 
 def universal(players: [Player], k: int) -> [Player]:
     population_fitness = 0
@@ -75,10 +71,11 @@ def universal(players: [Player], k: int) -> [Player]:
                 selection.append(player_accumulative_fitness[j + 1][1])
     return selection
 
-def ranking(players: [Player], k: int, population: int) -> [Player]:
+def ranking(players: [Player], k: int) -> [Player]:
     selection = []
     ranked_players = []
     players.sort(key=_sorter, reverse=True)
+    population = len(players)
     for i, player in enumerate(players):
         new_fitness = (population - i) / population
         ranked_player = copy.deepcopy(player)
@@ -94,8 +91,9 @@ def ranking(players: [Player], k: int, population: int) -> [Player]:
 
     return selection
 
-def deterministic_tournament(players: [Player], k: int, population: int, m: int) -> [Player]:
+def det_tourn(players: [Player], k: int, m: int) -> [Player]:
     selection = []
+    population = len(players)
     for i in range(k):
         first_selection = players[random.randint(0, population - 1)].copy()
         for j in range(m):
@@ -105,8 +103,9 @@ def deterministic_tournament(players: [Player], k: int, population: int, m: int)
         selection.append(first_selection)
     return selection
 
-def probabilistic_tournament(players: [Player], k: int, population: int, m: int, threshold: float) -> [Player]:
+def prob_tourn(players: [Player], k: int, threshold: float) -> [Player]:
     selection = []
+    population = len(players)
     for i in range(k):
         first_selection = players[random.randint(0, population - 1)].copy()
         second_selection = players[random.randint(0, population - 1)].copy()
@@ -125,15 +124,14 @@ def probabilistic_tournament(players: [Player], k: int, population: int, m: int,
 
     return selection
 
-
-def boltzmann(players: [Player], k: int, population: int, gen: int, t0: int, tc: int, kbol: int) -> [Player]:
+def boltzmann(players: [Player], k: int, ti: int, t0: float, tc: float) -> [Player]:
     selection = []
     ranked_players = []
-    val = tc + (t0 - tc) * math.exp(-kbol * gen)
+    val = tc + (t0 - tc) * math.exp(-kbol * ti)
     population_average = sum(list(map(lambda player: math.exp(player.fitness/val), players)))/len(players)
     for i, player in enumerate(players):
         new_fitness = math.exp(player.fitness/val)/population_average
-        ranked_player = copy.deepcopy(player)
+        ranked_player = player.copy()
         ranked_player.fitness = new_fitness
         ranked_players.append(ranked_player)
 
