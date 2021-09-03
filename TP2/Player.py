@@ -3,6 +3,7 @@ import random
 
 import pandas as pd
 
+idd = 0
 ARMAS = "armas"
 BOTAS = "botas"
 CASCOS = "cascos"
@@ -55,6 +56,9 @@ class Player:
         self.attrs = [arma, bota, casco, guante, pechera, h]
         # calculamos el fitness
         self.fitness = self.calculate_fitness()
+        global idd
+        self.id = idd
+        idd+= 1
 
     def calculate_fitness(self):
         arma, bota, casco, guante, pechera, h = self.attrs
