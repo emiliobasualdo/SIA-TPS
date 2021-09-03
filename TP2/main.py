@@ -130,8 +130,11 @@ async def main(websocket, path):
                                 columns=["armas", "botas", "cascos", "guantes", "pecheras", "height", "fitness"])
     print("Listo")
     if config["graphs"] == "true":
-        px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
         #px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
+        #px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
+        top = res_df.nlargest(10, ["fitness"], keep="all")
+        print(top)
+        px.scatter(top, x="height", y="fitness", ).show()
 
 
 class Ws_mock:
