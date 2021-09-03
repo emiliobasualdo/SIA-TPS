@@ -1,5 +1,6 @@
 import math
 import random
+from typing import Any
 
 import pandas as pd
 
@@ -22,9 +23,6 @@ items = {
 def set_item(k, v: pd.DataFrame):
     items[k] = v.copy(deep=True)
 
-def random_item(index) -> int:
-    df = items[item_indexes[index]]
-    return df.index[random.randint(0, len(df.index) - 1)]
 
 GUERRERO = "guerrero"
 ARQUERO = "arquero"
@@ -39,16 +37,18 @@ fitness_funcs = {
 }
 
 class Player:
+    MIN_H = 0
+    MAX_H = 0
+
     ARMA = 0
     BOTA = 1
     CASCO = 2
     GUANTE = 3
     PECHERA = 4
     HEIGHT = 5
-    CHARACTER = 6
 
-    ATTR_LEN = 6
     ITEMS_LEN = 5
+    ATTR_LEN = 6
 
     def __init__(self, arma: int, bota: int, casco: int, guante: int, pechera: int, h: float, char_class: str):
         self.char_class = char_class
@@ -103,15 +103,27 @@ class Player:
     def __iter__(self):
         return [*self.attrs, self.fitness].__iter__()
 
+    @classmethod
+    def set_height(cls, min_h: float, max_h: float):
+        cls.MIN_H = min_h
+        cls.MAX_H = max_h
 
-def rand_player(min_h: float, max_h: float, char_class: str) -> Player:
-    return Player(
-        random.randint(0, len(items[ARMAS]) - 1),
-        random.randint(0, len(items[BOTAS]) - 1),
-        random.randint(0, len(items[CASCOS]) - 1),
-        random.randint(0, len(items[GUANTES]) - 1),
-        random.randint(0, len(items[PECHERAS]) - 1),
-        random.uniform(min_h, max_h),
-        char_class
-    )
+    @classmethod
+    def random_attr(cls, index):
+        if index == Player.HEIGHT:
+            return random.uniform(cls.MIN_H, cls.MAX_H)
+        df = items[item_indexes[index]]
+        return df.index[random.randint(0, len(df.index) - 1)]
+
+    @classmethod
+    def rand_player(cls, char_class: str):
+        return Player(
+            random.randint(0, len(items[ARMAS]) - 1),
+            random.randint(0, len(items[BOTAS]) - 1),
+            random.randint(0, len(items[CASCOS]) - 1),
+            random.randint(0, len(items[GUANTES]) - 1),
+            random.randint(0, len(items[PECHERAS]) - 1),
+            random.uniform(cls.MIN_H, cls.MAX_H),
+            char_class
+        )
 
