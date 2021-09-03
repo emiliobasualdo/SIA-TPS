@@ -131,7 +131,7 @@ async def main(websocket, path):
 
     stop_condition_method = config["stop_condition"]
     if stop_condition_method == "max_iterations":
-        stop_condition = lambda pls: False
+        stop_condition = lambda maxf,gene,timer: False
     elif stop_condition_method == "gen_quantity":
         condition = int(config["gen_quantity"])
         stop_condition = lambda maxf,gene,timer: gen_quantity(gene,condition)
