@@ -10,9 +10,9 @@ import asyncio
 import websockets
 
 pd.options.plotting.backend = "plotly"
-from Player import items, set_item, rand_player, Player, characters
+from Player import items, set_item, Player, characters
 from cross_over_methods import one_point, two_points, anular, uniform
-from mutation_methods import single_gen, multi_gen_lim, multi_gen_uni
+from mutation_methods import single_gen, multi_gen_lim, multi_gen_uni, complete_mutation
 from selection_methods import random_sel, elite, roulette, universal
 
 _config = configparser.ConfigParser()
@@ -61,9 +61,10 @@ async def main(websocket, path):
     char_class = config["character_class"]
     assert char_class in characters
     print(f"Creando generation N={N} players {char_class}")
+    Player.set_height(min_h, max_h)
     generation = []
     for i in range(N):
-        generation.append(rand_player(min_h, max_h, char_class))
+        generation.append(Player.rand_player(char_class))
 
     # generamos las funciones según config
     sel_config = _config["SELECTION"]
@@ -101,7 +102,8 @@ async def main(websocket, path):
         mutation = lambda pls: multi_gen_lim(pls, M, Pm)
     elif mutation_method == "complete":
         Pm = float(mu_config["Pm"])
-        Pms = float(mu_config["Pm"])
+        Pms = [float(i) for i in mu_config["Pms"].split(",")]
+        assert len(Pms) == Player.ATTR_LEN
         mutation = lambda pls: complete_mutation(pls, Pm, Pms)
     else:
         raise AttributeError(f"No such Mutation method {cross_over_method}")
