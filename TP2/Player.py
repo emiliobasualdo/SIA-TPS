@@ -77,11 +77,11 @@ class Player:
             res += item_scores["Re"]
             vid += item_scores["Vi"]
 
-        fue = 100 * math.tanh(0.1 * fue)
-        agi = math.tanh(0.1 * agi)
-        per = 0.6 * math.tanh(0.1 * per)
-        res = math.tanh(0.1 * res)
-        vid = 100 * math.tanh(0.1 * vid)
+        fue = 100 * math.tanh(0.01 * fue)
+        agi = math.tanh(0.01 * agi)
+        per = 0.6 * math.tanh(0.01 * per)
+        res = math.tanh(0.01 * res)
+        vid = 100 * math.tanh(0.01 * vid)
 
         a = (agi + per) * fue * atm
         d = (res + per) * vid * dem
