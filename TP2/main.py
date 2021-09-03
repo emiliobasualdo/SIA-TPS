@@ -5,6 +5,7 @@ import os
 import random
 import pandas as pd
 import plotly.express as px
+import time
 
 import asyncio
 import websockets
@@ -14,6 +15,7 @@ from Player import items, set_item, rand_player, Player, characters
 from cross_over_methods import one_point, two_points, anular, uniform
 from mutation_methods import single_gen, multi_gen_lim, multi_gen_uni
 from selection_methods import random_sel, elite, roulette, universal
+from break_methods import gen_quantity, time, fitness_goal
 
 _config = configparser.ConfigParser()
 
@@ -114,19 +116,36 @@ async def main(websocket, path):
 
     # iteramos
     max_iterations = int(config["max_iterations"])
+    condition = None
+    gen = 0
+
     stop_condition_method = config["stop_condition"]
     if stop_condition_method == "max_iterations":
         stop_condition = lambda pls: False
+    elif stop_condition_method == "gen_quantity":
+        condition = int(config["gen_quantity"])
+        stop_condition = lambda maxf,gene,timer: gen_quantity(gene,condition)
+    elif stop_condition_method == "time":
+        condition = float(config["time"])
+        stop_condition = lambda maxf,gene,timer: time(timer,condition)
+    elif stop_condition_method =="fitness_goal":
+        condition = int(config["fitness_goal"])
+        stop_condition = lambda maxf,gene,timer: fitness_goal(maxf,condition)
+
     else:
         raise AttributeError(f"No such Stop Condition method {stop_condition_method}")
 
     print(f"Iterando {max_iterations} veces")
     stop_condition_met = False
+    start_timer = time.clock()
     for i in range(max_iterations):
+
         if i % 5 == 0:
+            current_time = time.clock() - start_timer
+            gen = gen + 5
             min_f, avg_f, max_f = calculate_stats(generation)
             await websocket.send(json.dumps((i, min_f, avg_f, max_f, len(generation))))
-            if stop_condition(generation):
+            if stop_condition(max_f,gen,current_time):
                 stop_condition_met = True
                 break
         k_parents = selection(generation)
