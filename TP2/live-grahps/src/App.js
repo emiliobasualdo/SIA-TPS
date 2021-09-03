@@ -35,7 +35,7 @@ class App extends Component{
           ]}
           options={{
             title: 'Min., Avg. y Max Fitness',
-            hAxis: { title: 'Iteraciones', minValue: 0 },
+            hAxis: { title: 'Iteraciones', minValue: 0, maxValue:500},
             vAxis: { title: 'Fitness', minValue: 0},
           }}
           rootProps={{ 'data-testid': '1' }}

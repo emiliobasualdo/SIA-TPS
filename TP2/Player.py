@@ -25,10 +25,10 @@ def random_item(index) -> int:
     df = items[item_indexes[index]]
     return df.index[random.randint(0, len(df.index) - 1)]
 
-GUERRERO = "Guerrero"
-ARQUERO = "Arquero"
-DEFENSOR = "Defensor"
-INFLITRADO = "Inflitrado"
+GUERRERO = "guerrero"
+ARQUERO = "arquero"
+DEFENSOR = "defensor"
+INFLITRADO = "inflitrado"
 characters = [GUERRERO, ARQUERO, DEFENSOR, INFLITRADO]
 fitness_funcs = {
     GUERRERO: lambda a, d: 0.6 * a + 0.6 * d,
@@ -46,18 +46,20 @@ class Player:
     HEIGHT = 5
     CHARACTER = 6
 
-    ATTR_LEN = 7
+    ATTR_LEN = 6
     ITEMS_LEN = 5
 
-    def __init__(self, arma: int, bota: int, casco: int, guante: int, pechera: int, h: float, character: str):
-        self.attrs = [arma, bota, casco, guante, pechera, h, character]
+    def __init__(self, arma: int, bota: int, casco: int, guante: int, pechera: int, h: float, char_class: str):
+        self.char_class = char_class
+        self.fitness_func = fitness_funcs[char_class]
+        self.attrs = [arma, bota, casco, guante, pechera, h]
         # calculamos el fitness
         self.fitness = self.calculate_fitness()
 
     def calculate_fitness(self):
-        arma, bota, casco, guante, pechera, h, character = self.attrs
-        atm = 0.7 - (3 * h - 5) ** 4 + (3 * h - 5) ** 2 + h / 4
-        dem = 1.9 + (2.5 * h - 4.16) ** 4 - (2.5 * h - 4.16) ** 2 - 3 * h / 10
+        arma, bota, casco, guante, pechera, h = self.attrs
+        atm = 0.7 - ((3 * h - 5) ** 4) + ((3 * h - 5) ** 2) + (h / 4)
+        dem = 1.9 + ((2.5 * h - 4.16) ** 4) - ((2.5 * h - 4.16) ** 2) - (3 * h / 10)
         fue = 0
         agi = 0
         per = 0
@@ -71,8 +73,8 @@ class Player:
             res += item_scores["Re"]
             vid += item_scores["Vi"]
 
-        fue = math.tanh(0.1 * fue)
-        agi = 100 * math.tanh(0.1 * agi)
+        fue = 100 * math.tanh(0.1 * fue)
+        agi = math.tanh(0.1 * agi)
         per = 0.6 * math.tanh(0.1 * per)
         res = math.tanh(0.1 * res)
         vid = 100 * math.tanh(0.1 * vid)
@@ -80,14 +82,14 @@ class Player:
         a = (agi + per) * fue * atm
         d = (res + per) * vid * dem
 
-        return fitness_funcs[character](a, d)
+        return self.fitness_func(a,d)
 
     def set_item(self, index, item_value):
         self.attrs[index] = item_value
         self.fitness = self.calculate_fitness()
 
     def copy(self):
-        return Player(*self.attrs)
+        return Player(*self.attrs, self.char_class)
 
     def __repr__(self):
         resp = "("
@@ -98,7 +100,7 @@ class Player:
         return [*self.attrs, self.fitness].__iter__()
 
 
-def rand_player(min_h: float, max_h: float) -> Player:
+def rand_player(min_h: float, max_h: float, char_class: str) -> Player:
     return Player(
         random.randint(0, len(items[ARMAS]) - 1),
         random.randint(0, len(items[BOTAS]) - 1),
@@ -106,6 +108,6 @@ def rand_player(min_h: float, max_h: float) -> Player:
         random.randint(0, len(items[GUANTES]) - 1),
         random.randint(0, len(items[PECHERAS]) - 1),
         random.uniform(min_h, max_h),
-        characters[random.randint(0, 3)]
+        char_class
     )
 

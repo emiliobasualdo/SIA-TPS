@@ -1,5 +1,6 @@
 import configparser
 import json
+import math
 import os
 import random
 import pandas as pd
@@ -9,7 +10,7 @@ import asyncio
 import websockets
 
 pd.options.plotting.backend = "plotly"
-from Player import items, set_item, rand_player, Player
+from Player import items, set_item, rand_player, Player, characters
 from cross_over_methods import one_point, two_points, anular, uniform
 from mutation_methods import single_gen, multi_gen_lim, multi_gen_uni
 from selection_methods import random_sel, elite, roulette, universal
@@ -60,15 +61,19 @@ async def main(websocket, path):
     k = int(config["k"])
     min_h = float(config["min_h"])
     max_h = float(config["max_h"])
-    print(f"Creando generation N={N} player")
+    char_class = config["character_class"]
+    assert char_class in characters
+    print(f"Creando generation N={N} players {char_class}")
     generation = []
     for i in range(N):
-        generation.append(rand_player(min_h, max_h))
+        generation.append(rand_player(min_h, max_h, char_class))
 
     # generamos las funciones según config
     sel_config = _config["SELECTION"]
-    selection_method = selection_methods[sel_config["method"]]
-    selection = lambda pls: selection_method(pls, k)
+    selection_method1 = selection_methods[sel_config["method1"]]
+    selection_method2 = selection_methods[sel_config["method2"]]
+    A = float(sel_config["A"])
+    selection = lambda pls: selection_method1(pls, math.floor(k*A)) + selection_method2(pls, math.ceil(k*(1-A)))
 
     co_config = _config["CROSS_OVER"]
     cross_over_method = co_config["method"]
@@ -106,15 +111,17 @@ async def main(websocket, path):
 
 
     new_sel_config = _config["NEW_GEN_SELECTION"]
-    new_generation_selection_method = selection_methods[new_sel_config["method"]]
+    new_generation_selection_method1 = selection_methods[new_sel_config["method1"]]
+    new_generation_selection_method2 = selection_methods[new_sel_config["method2"]]
+    B = float(new_sel_config["B"])
     fill = new_sel_config["fill"]
     if fill == "all":
-        new_generation_selection = lambda k_parents, k_kids: new_generation_selection_method(k_parents + k_kids, N)
+        new_generation_selection = lambda k_parents, k_kids: new_generation_selection_method1(k_parents + k_kids, math.floor(N*B)) + new_generation_selection_method1(k_parents + k_kids, math.floor(N*(1-B)))
     else:
         if k >= N:
-            new_generation_selection = lambda k_parents, k_kids: new_generation_selection_method(k_kids, N)
+            new_generation_selection = lambda k_parents, k_kids: new_generation_selection_method1(k_kids, math.floor(N*B)) + new_generation_selection_method1(k_kids, math.floor(N*(1-B)))
         else:
-            new_generation_selection = lambda k_parents, k_kids: k_kids + new_generation_selection_method(k_parents, N - k)
+            new_generation_selection = lambda k_parents, k_kids: k_kids + new_generation_selection_method2(k_parents, math.floor((N - k)*B)) + new_generation_selection_method2(k_parents, math.floor((N - k)*(1-B)))
 
     # iteramos
     print(f"Iterando {MAX_ITERATIONS} veces")
@@ -128,11 +135,11 @@ async def main(websocket, path):
         generation = new_generation_selection(k_parents, k_kids)
 
     res_df = pd.DataFrame().from_records(generation,
-                                columns=["armas", "botas", "cascos", "guantes", "pecheras", "height", "character", "fitness"])
+                                columns=["armas", "botas", "cascos", "guantes", "pecheras", "height", "fitness"])
     print("Listo")
     if config["graphs"] == "true":
-        px.box(res_df[["character", "fitness"]], x="character", y="fitness").show()
         px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
+        #px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
 
 
 class Ws_mock:
