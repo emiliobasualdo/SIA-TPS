@@ -81,20 +81,28 @@ async def main(websocket, path):
     elif cross_over_method == "anular":
         cross_over = anular
     elif cross_over_method == "uniform":
-        cross_over = uniform
+        Pc = float(co_config["Pc"])
+        cross_over = lambda pls: uniform(pls, Pc)
     else:
         raise AttributeError(f"No such CrossOver method {cross_over_method}")
 
     mu_config = _config["MUTATION"]
     mutation_method = mu_config["method"]
-    Pm = float(mu_config["Pm"])
     if mutation_method == "single_gen":
+        Pm = float(mu_config["Pm"])
         mutation = lambda pls: single_gen(pls, Pm)
     elif mutation_method == "multi_gen_uni":
-        mutation = lambda pls: multi_gen_uni(pls, Pm)
+        Pms = [float(i) for i in mu_config["Pms"].split(",")]
+        assert len(Pms) == Player.ATTR_LEN
+        mutation = lambda pls: multi_gen_uni(pls, Pms)
     elif mutation_method == "multi_gen_lim":
         M = int(mu_config["M"])
+        Pm = float(mu_config["Pm"])
         mutation = lambda pls: multi_gen_lim(pls, M, Pm)
+    elif mutation_method == "complete":
+        Pm = float(mu_config["Pm"])
+        Pms = float(mu_config["Pm"])
+        mutation = lambda pls: complete_mutation(pls, Pm, Pms)
     else:
         raise AttributeError(f"No such Mutation method {cross_over_method}")
 

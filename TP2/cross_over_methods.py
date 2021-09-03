@@ -48,13 +48,13 @@ def anular(players: [Player]):
         new_born.append(new_p)
     return new_born
 
-def uniform(players: [Player]):
+def uniform(players: [Player], Pc: float):
     new_born = []
     for i in range(int(len(players) / 2)):
         new_genes_1 = [-1] * Player.ATTR_LEN
         new_genes_2 = [-1] * Player.ATTR_LEN
         for j in range(Player.ATTR_LEN):
-            if random.uniform(0, 1) < 0.5:
+            if random.uniform(0, 1) < Pc:
                 new_genes_1[j] = players[i].attrs[j]
                 new_genes_2[j] = players[i+1].attrs[j]
             else:
