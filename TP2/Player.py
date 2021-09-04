@@ -27,7 +27,7 @@ def set_item(k, v: pd.DataFrame):
 GUERRERO = "guerrero"
 ARQUERO = "arquero"
 DEFENSOR = "defensor"
-INFLITRADO = "inflitrado"
+INFLITRADO = "infiltrado"
 characters = [GUERRERO, ARQUERO, DEFENSOR, INFLITRADO]
 fitness_funcs = {
     GUERRERO: lambda a, d: 0.6 * a + 0.6 * d,

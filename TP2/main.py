@@ -61,7 +61,7 @@ def _cross_over_method(config):
 
 def _selection_method(config, N: int, k: int):
     def get_method(method_name, config):
-        if method_name == "random_sel":
+        if method_name == "random":
             sel_method = lambda pls, i: random_sel(pls, k)
         elif method_name == "elite":
             sel_method = lambda pls, i: elite(pls, k)
