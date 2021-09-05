@@ -55,10 +55,13 @@ class Player:
         self.fitness_func = fitness_funcs[char_class]
         self.attrs = [arma, bota, casco, guante, pechera, h]
         # calculamos el fitness
-        self.fitness = self.calculate_fitness()
         global idd
         self.id = idd
         idd += 1
+
+    @property
+    def fitness(self):
+        return self.calculate_fitness()
 
     def calculate_fitness(self):
         arma, bota, casco, guante, pechera, h = self.attrs
@@ -90,7 +93,6 @@ class Player:
 
     def set_item(self, index, item_value):
         self.attrs[index] = item_value
-        self.fitness = self.calculate_fitness()
 
     def copy(self):
         return Player(*self.attrs, self.char_class)

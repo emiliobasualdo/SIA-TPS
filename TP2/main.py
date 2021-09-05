@@ -47,67 +47,70 @@ def _mu_method(config):
     return mutation
 
 
-def _cross_over_method(config):
+def _cross_over_method(config, mutation_method):
     cross_over_method = config["method"]
     if cross_over_method == "one_point":
-        cross_over = one_point
+        cross_over = lambda pls: one_point(pls, mutation_method)
     elif cross_over_method == "two_points":
-        cross_over = two_points
+        cross_over = lambda pls: two_points(pls, mutation_method)
     elif cross_over_method == "anular":
-        cross_over = anular
+        cross_over = lambda pls: anular(pls, mutation_method)
     elif cross_over_method == "uniform":
         Pc = float(config["Pc"])
-        cross_over = lambda pls: uniform(pls, Pc)
+        cross_over = lambda pls: uniform(pls, Pc, mutation_method)
     else:
         raise AttributeError(f"No such CrossOver method {cross_over_method}")
     return cross_over
 
 
 def _selection_method(config, N: int, k: int):
-    def get_method(method_name, config):
+    def get_method(method_name, config, _k):
         if method_name == "random":
-            sel_method = lambda pls, i: random_sel(pls, k)
+            sel_method = lambda pls, i: random_sel(pls, _k)
         elif method_name == "elite":
-            sel_method = lambda pls, i: elite(pls, k)
+            sel_method = lambda pls, i: elite(pls, _k)
         elif method_name == "roulette":
-            sel_method = lambda pls, i: roulette(pls, k)
+            sel_method = lambda pls, i: roulette(pls, _k)
         elif method_name == "universal":
-            sel_method = lambda pls, i: universal(pls, k)
+            sel_method = lambda pls, i: universal(pls, _k)
         elif method_name == "ranking":
-            sel_method = lambda pls, i: ranking(pls, k)
+            sel_method = lambda pls, i: ranking(pls, _k)
         elif method_name == "det_tourn":
             M = float(config["M"])
-            sel_method = lambda pls, i: prob_tourn(pls, k, M)
+            sel_method = lambda pls, i: prob_tourn(pls, _k, M)
         elif method_name == "prob_tourn":
             th = float(config["th"])
-            sel_method = lambda pls, i: prob_tourn(pls, k, th)
+            sel_method = lambda pls, i: prob_tourn(pls, _k, th)
         elif method_name == "boltzmann":
             t0 = float(config["t0"])
             tc = float(config["tc"])
-            sel_method = lambda pls, i: boltzmann(pls, k, i, t0, tc)
+            sel_method = lambda pls, i: boltzmann(pls, _k, i, t0, tc)
         else:
             raise AttributeError(f"No such selection method {method_name}")
         return sel_method
 
-    selection_method1 = get_method(config["method1"], config)
-    selection_method2 = get_method(config["method2"], config)
+    m1 = config["method1"]
+    m2 = config["method2"]
     A = float(config["A"])
     if "fill" not in config:
-        return lambda pls: selection_method1(pls, math.floor(k * A)) + selection_method2(pls, math.ceil(k * (1 - A)))
+        method1 = get_method(m1, config, math.floor(k * A))
+        method2 = get_method(m2, config, math.ceil(k * (1 - A)))
+        return lambda pls, i: method1(pls, i) + method2(pls, i)
 
     fill = config["fill"]
     if fill == "all":
-        selection_method = lambda k_parents, k_kids: selection_method1(k_parents + k_kids,
-                                                                       math.floor(N * A)) + selection_method2(
-            k_parents + k_kids, math.floor(N * (1 - A)))
+        method1 = get_method(m1, config, math.floor(N * A))
+        method2 = get_method(m2, config, math.ceil(N * (1 - A)))
+        selection_method = lambda k_parents, k_kids, i: method1(k_parents + k_kids, i) + method2(k_parents + k_kids, i)
     else:
         if k >= N:
-            selection_method = lambda k_parents, k_kids: selection_method1(k_kids,
-                                                                           math.floor(N * A)) + selection_method2(
-                k_kids, math.floor(N * (1 - A)))
+            method1 = get_method(m1, config, math.floor(N * A))
+            method2 = get_method(m2, config, math.ceil(N * (1 - A)))
+            selection_method = lambda k_parents, k_kids, i: method1(k_kids, i) + method2(k_kids, i)
         else:
-            selection_method = lambda k_parents, k_kids: k_kids + selection_method1(k_parents, math.floor(
-                (N - k) * A)) + selection_method2(k_parents, math.floor((N - k) * (1 - A)))
+            method1 = get_method(m1, config, math.floor((N - k) * A))
+            method2 = get_method(m2, config, math.ceil((N - k) * (1 - A)))
+            selection_method = lambda k_parents, k_kids, i: k_kids + method1(k_parents, i) + method2(k_parents, i)
     return selection_method
 
 
@@ -168,8 +171,8 @@ async def main(websocket, path):
 
     # generamos las funciones según config
     selection = _selection_method(_config["SELECTION"], N, k)
-    cross_over = _cross_over_method(_config["CROSS_OVER"])
     mutation = _mu_method(_config["MUTATION"])
+    cross_over = _cross_over_method(_config["CROSS_OVER"], mutation)
     new_generation_selection = _selection_method(_config["NEW_GEN_SELECTION"], N, k)
 
     # iteramos
@@ -201,10 +204,9 @@ async def main(websocket, path):
             historical_h_stats.append((i, min_h, avg_h, max_h))
             await websocket.send(json.dumps(f_stats))
         i += 1
-        k_parents = selection(generation)
+        k_parents = selection(generation, i)
         k_kids = cross_over(k_parents)
-        mutation(k_kids)
-        generation = new_generation_selection(k_parents, k_kids)
+        generation = new_generation_selection(k_parents, k_kids, i)
 
     f_col_names = ["i", "min_f", "avg_f", "max_f", "N"]
     h_col_names = ["i", "min_h", "avg_h", "max_h"]
