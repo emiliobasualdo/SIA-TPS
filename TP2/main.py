@@ -231,8 +231,7 @@ async def main(websocket, path):
                                              columns=["armas", "botas", "cascos", "guantes", "pecheras", "height",
                                                       "fitness"])
 
-        top = res_df[["height", "fitness"]].nlargest(math.floor(0.5 * N), "fitness", keep="all").groupby(
-            by=["height", "fitness"]).size()
+        top = res_df[["height", "fitness"]].groupby(by=["height", "fitness"]).size()
         top = top.reset_index(name='count')
         print(top, top.sum())
         fig = make_subplots(rows=3, cols=2,
