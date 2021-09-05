@@ -1,6 +1,6 @@
 import math
 import random
-from typing import Any
+from typing import Any, Callable
 
 import pandas as pd
 
@@ -20,6 +20,7 @@ items = {
     PECHERAS: pd.DataFrame(),
 }
 
+
 def set_item(k, v: pd.DataFrame):
     items[k] = v.copy(deep=True)
 
@@ -36,6 +37,7 @@ fitness_funcs = {
     INFLITRADO: lambda a, d: 0.8 * a + 0.3 * d,
 }
 
+
 class Player:
     MIN_H = 0
     MAX_H = 0
@@ -50,18 +52,31 @@ class Player:
     ITEMS_LEN = 5
     ATTR_LEN = 6
 
+    F_ACCESSOR = "fitness"
+    RF_ACCESSOR = "relative_fitness"
+
     def __init__(self, arma: int, bota: int, casco: int, guante: int, pechera: int, h: float, char_class: str):
         self.char_class = char_class
         self.fitness_func = fitness_funcs[char_class]
         self.attrs = [arma, bota, casco, guante, pechera, h]
+        self._fitness = 0
+        self.relative_fitness = 0
         # calculamos el fitness
         global idd
         self.id = idd
         idd += 1
 
+    def __getitem__(self, key):
+        if key == Player.F_ACCESSOR:
+            return self._fitness
+        elif key == Player.RF_ACCESSOR:
+            return self.relative_fitness
+        raise NotImplementedError(f"No such player attribute {key}")
+
     @property
     def fitness(self):
-        return self.calculate_fitness()
+        self._fitness = self.calculate_fitness()
+        return self._fitness
 
     def calculate_fitness(self):
         arma, bota, casco, guante, pechera, h = self.attrs
@@ -128,4 +143,3 @@ class Player:
             random.uniform(cls.MIN_H, cls.MAX_H),
             char_class
         )
-

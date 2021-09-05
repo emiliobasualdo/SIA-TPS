@@ -26,16 +26,16 @@ def elite(players: [Player], k: int) -> [Player]:
             selection.append(players[i].copy())
     return selection
 
-def roulette(players: [Player], k: int) -> [Player]:
+def roulette(players: [Player], k: int, fitness_accessor=Player.F_ACCESSOR) -> [Player]:
     population_fitness = 0
     r = 0
     selection = []
     player_accumulative_fitness = [(0, None)]
     accumulative_fitness = 0
     for player in players:
-        population_fitness = population_fitness + player.fitness
+        population_fitness = population_fitness + player[fitness_accessor]
     for player in players:
-        relative_fitness = player.fitness / population_fitness
+        relative_fitness = player[fitness_accessor] / population_fitness
         accumulative_fitness = accumulative_fitness + relative_fitness
         player_accumulative_fitness.append((accumulative_fitness, player))
     for i in range(k):
@@ -73,19 +73,16 @@ def universal(players: [Player], k: int) -> [Player]:
 
 def ranking(players: [Player], k: int) -> [Player]:
     selection = []
-    ranked_players = []
     players.sort(key=_sorter, reverse=True)
     population = len(players)
     for i, player in enumerate(players):
-        new_fitness = (population - i) / population
-        ranked_player = copy.deepcopy(player)
-        ranked_player.fitness = new_fitness
-        ranked_players.append(ranked_player)
+        relative_fitness = (population - i) / population
+        player.relative_fitness = relative_fitness
 
-    ranked_players = roulette(ranked_players, k)
+    ranked_players = roulette(players, k, Player.RF_ACCESSOR)
     for ranked_player in ranked_players:
         for player in players:
-            if player.idd == ranked_player.idd:
+            if player.id == ranked_player.id:
                 selection.append(player)
                 break
 
@@ -126,19 +123,16 @@ def prob_tourn(players: [Player], k: int, threshold: float) -> [Player]:
 
 def boltzmann(players: [Player], k: int, ti: int, t0: float, tc: float) -> [Player]:
     selection = []
-    ranked_players = []
     val = tc + (t0 - tc) * math.exp(-kbol * ti)
     population_average = sum(list(map(lambda player: math.exp(player.fitness/val), players)))/len(players)
     for i, player in enumerate(players):
-        new_fitness = math.exp(player.fitness/val)/population_average
-        ranked_player = player.copy()
-        ranked_player.fitness = new_fitness
-        ranked_players.append(ranked_player)
+        relative_fitness = math.exp(player.fitness/val)/population_average
+        player.relative_fitness = relative_fitness
 
-    ranked_players = roulette(ranked_players, k)
+    ranked_players = roulette(players, k, Player.RF_ACCESSOR)
     for ranked_player in ranked_players:
         for player in players:
-            if player.idd == ranked_player.idd:
+            if player.id == ranked_player.id:
                 selection.append(player)
                 break
 

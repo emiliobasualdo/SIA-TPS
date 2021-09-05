@@ -14,7 +14,7 @@ import websockets
 from plotly.subplots import make_subplots
 
 pd.options.plotting.backend = "plotly"
-from Player import items, set_item, Player, characters
+from Player import items, set_item, Player, characters, item_indexes
 import plotly.graph_objs as go
 from cross_over_methods import one_point, two_points, anular, uniform
 from mutation_methods import single_gen, multi_gen_lim, multi_gen_uni, complete_mutation
@@ -123,6 +123,8 @@ def calculate_stats(generation: [Player]):
     max_height = 0
     avg_height = 0
 
+    diversity=[set() for _ in range(Player.ATTR_LEN)]
+
     for player in generation:
         avg_fitness += player.fitness
         if min_fitness > player.fitness:
@@ -136,10 +138,14 @@ def calculate_stats(generation: [Player]):
         if max_height < player.attrs[Player.HEIGHT]:
             max_height = player.attrs[Player.HEIGHT]
 
-    if len(generation):
-        avg_fitness /= len(generation)
-        avg_height /= len(generation)
-    return min_fitness, avg_fitness, max_fitness, min_height, avg_height, max_height
+        for i in range(Player.ATTR_LEN):
+            diversity[i].add(player.attrs[i])
+
+    avg_fitness /= len(generation)
+    avg_height /= len(generation)
+
+    diversity = list(map(lambda s: len(s), diversity))
+    return min_fitness, avg_fitness, max_fitness, min_height, avg_height, max_height, diversity
 
 
 async def main(websocket, path):
@@ -193,54 +199,72 @@ async def main(websocket, path):
     print(f"Iterando")
     historical_f_stats = []
     historical_h_stats = []
+    historical_d_stats = []
     start_timer = datetime.now()
     max_f = 0
     i = 0
     while not stop_condition(max_f, i, (datetime.now() - start_timer).seconds):
         if i % 5 == 0:
-            min_f, avg_f, max_f, min_h, avg_h, max_h = calculate_stats(generation)
-            f_stats = (i, min_f, avg_f, max_f, len(generation))
+            min_f, avg_f, max_f, min_h, avg_h, max_h, diversity = calculate_stats(generation)
+            f_stats = (i, min_f, avg_f, max_f)
             historical_f_stats.append(f_stats)
-            historical_h_stats.append((i, min_h, avg_h, max_h))
-            await websocket.send(json.dumps(f_stats))
+            h_stats = (i, min_h, avg_h, max_h)
+            historical_h_stats.append(h_stats)
+            d_stats = (i, *diversity)
+            historical_d_stats.append(d_stats)
+            await websocket.send(json.dumps((f_stats, h_stats, d_stats)))
         i += 1
         k_parents = selection(generation, i)
         k_kids = cross_over(k_parents)
         generation = new_generation_selection(k_parents, k_kids, i)
 
-    f_col_names = ["i", "min_f", "avg_f", "max_f", "N"]
-    h_col_names = ["i", "min_h", "avg_h", "max_h"]
-    f_stats_df = pd.DataFrame(historical_f_stats, columns=f_col_names)
-    h_stats_df = pd.DataFrame(historical_h_stats, columns=h_col_names)
-    res_df = pd.DataFrame().from_records(generation,
-                                         columns=["armas", "botas", "cascos", "guantes", "pecheras", "height",
-                                                  "fitness"])
-
+    time_taken = (datetime.now() - start_timer).seconds
     if config["graphs"] == "true":
-        # px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
-        top = res_df.nlargest(10, ["fitness"], keep="all")
-        print(top)
-        # px.scatter(top, x="height", y="fitness").show()
 
-        fig = make_subplots(rows=3, cols=1,
-                            row_heights=[0.45, 0.45, 0.05],
-                            shared_xaxes=True, vertical_spacing=0.02)
+        f_col_names = ["i", "min_f", "avg_f", "max_f"]
+        h_col_names = ["i", "min_h", "avg_h", "max_h"]
+        d_col_names = ["i"]+item_indexes+["height"]
+        f_stats_df = pd.DataFrame(historical_f_stats, columns=f_col_names)
+        h_stats_df = pd.DataFrame(historical_h_stats, columns=h_col_names)
+        d_stats_df = pd.DataFrame(historical_d_stats, columns=d_col_names)
+        res_df = pd.DataFrame().from_records(generation,
+                                             columns=["armas", "botas", "cascos", "guantes", "pecheras", "height",
+                                                      "fitness"])
 
-        for col in f_col_names[1:-1]:
+        top = res_df[["height", "fitness"]].nlargest(math.floor(0.5 * N), "fitness", keep="all").groupby(
+            by=["height", "fitness"]).size()
+        top = top.reset_index(name='count')
+        print(top, top.sum())
+        fig = make_subplots(rows=3, cols=2,
+                            specs=[[{}, {"rowspan": 2}],
+                                   [{}, None],
+                                   [{}, None]],
+                            shared_xaxes=True, vertical_spacing=0.02, horizontal_spacing=0.1)
+
+        for col in f_col_names[1:]:
             fig.append_trace(go.Scatter(legendgroup='1', name=col, x=f_stats_df["i"], y=f_stats_df[col]), 1, 1)
         for col in h_col_names[1:]:
             fig.append_trace(go.Scatter(legendgroup='2', name=col, x=h_stats_df["i"], y=h_stats_df[col]), 2, 1)
-        fig.append_trace(go.Scatter(legendgroup='3', name="Count", x=f_stats_df["i"], y=f_stats_df["N"]), 3, 1)
+        for col in d_col_names[1:]:
+            fig.append_trace(go.Scatter(legendgroup='3', name=col, x=d_stats_df["i"], y=d_stats_df[col]), 3, 1)
+
+
+        fig.add_trace(
+            go.Scatter(name="FxH", x=top["height"], y=top["fitness"], mode='markers', marker=dict(size=top["count"])),
+            row=1, col=2)
 
         # axis names
         fig.update_yaxes(title_text="Fitness", row=1, col=1)
         fig.update_yaxes(title_text="Height", row=2, col=1)
-        fig.update_yaxes(title_text="Count", row=3, col=1)
+        fig.update_yaxes(title_text="Alelos por locus", row=3, col=1)
         fig.update_xaxes(title_text="Generation", row=3, col=1)
 
+        fig.update_yaxes(title_text="Fitness", row=1, col=2)
+        fig.update_xaxes(title_text="Height", row=1, col=2)
+
         # title
-        params = f"Fitness, Height & Generation count <br>"
-        params += f"Character:{char_class}, N:{N}, k={k}, stop condition:{stop_condition_method} <br>"
+        params = f"Fitness, Height & Generation Count. Time taken={round(time_taken / 60, 2)}min <br>"
+        params += f"Character: {char_class}, N: {N}, k: {k}, stop condition: {stop_condition_method} <br>"
         params += "<span style='font-size: 10px;'>"
         for conf_section in ["SELECTION", "CROSS_OVER", "MUTATION", "NEW_GEN_SELECTION"]:
             for k, v in _config[conf_section].items():
@@ -250,7 +274,8 @@ async def main(websocket, path):
         params += "</span>"
         fig.update_layout(
             title_text=params,
-            legend_tracegroupgap=250,
+            showlegend=False,
+            #hovermode='x unified'
         )
         fig.show()
 
