@@ -11,17 +11,16 @@ import time
 
 import asyncio
 import websockets
-from plotly.subplots import make_subplots
-
-pd.options.plotting.backend = "plotly"
-from Player import items, set_item, Player, characters, item_indexes
 import plotly.graph_objs as go
+from plotly.subplots import make_subplots
+from Player import items, set_item, Player, characters, item_indexes
 from cross_over_methods import one_point, two_points, anular, uniform
 from mutation_methods import single_gen, multi_gen_lim, multi_gen_uni, complete_mutation
 from selection_methods import random_sel, elite, roulette, universal, ranking, det_tourn, prob_tourn, boltzmann
 from break_methods import gen_quantity, fitness_goal, stop_by_time
 
 _config = configparser.ConfigParser()
+pd.options.plotting.backend = "plotly"
 
 
 def _mu_method(config):
@@ -76,8 +75,8 @@ def _selection_method(config, N: int, k: int):
         elif method_name == "ranking":
             sel_method = lambda pls, i: ranking(pls, _k)
         elif method_name == "det_tourn":
-            M = float(config["M"])
-            sel_method = lambda pls, i: prob_tourn(pls, _k, M)
+            M = int(config["M"])
+            sel_method = lambda pls, i: det_tourn(pls, _k, M)
         elif method_name == "prob_tourn":
             th = float(config["th"])
             sel_method = lambda pls, i: prob_tourn(pls, _k, th)
@@ -123,7 +122,7 @@ def calculate_stats(generation: [Player]):
     max_height = 0
     avg_height = 0
 
-    diversity=[set() for _ in range(Player.ATTR_LEN)]
+    diversity = [set() for _ in range(Player.ATTR_LEN)]
 
     for player in generation:
         avg_fitness += player.fitness
@@ -223,7 +222,7 @@ async def main(websocket, path):
 
         f_col_names = ["i", "min_f", "avg_f", "max_f"]
         h_col_names = ["i", "min_h", "avg_h", "max_h"]
-        d_col_names = ["i"]+item_indexes+["height"]
+        d_col_names = ["i"] + item_indexes + ["height"]
         f_stats_df = pd.DataFrame(historical_f_stats, columns=f_col_names)
         h_stats_df = pd.DataFrame(historical_h_stats, columns=h_col_names)
         d_stats_df = pd.DataFrame(historical_d_stats, columns=d_col_names)
@@ -246,7 +245,6 @@ async def main(websocket, path):
             fig.append_trace(go.Scatter(legendgroup='2', name=col, x=h_stats_df["i"], y=h_stats_df[col]), 2, 1)
         for col in d_col_names[1:]:
             fig.append_trace(go.Scatter(legendgroup='3', name=col, x=d_stats_df["i"], y=d_stats_df[col]), 3, 1)
-
 
         fig.add_trace(
             go.Scatter(name="FxH", x=top["height"], y=top["fitness"], mode='markers', marker=dict(size=top["count"])),
@@ -274,7 +272,7 @@ async def main(websocket, path):
         fig.update_layout(
             title_text=params,
             showlegend=False,
-            #hovermode='x unified'
+            # hovermode='x unified'
         )
         fig.show()
 

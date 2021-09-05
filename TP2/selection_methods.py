@@ -2,7 +2,8 @@ import math
 import random
 import copy
 from Player import Player
-from scipy.constants import k as kbol
+
+kbol = 1.380649e-23
 
 def _sorter(p: Player):
     return p.fitness
