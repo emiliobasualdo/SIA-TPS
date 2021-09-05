@@ -11,9 +11,11 @@ import time
 
 import asyncio
 import websockets
+from plotly.subplots import make_subplots
 
 pd.options.plotting.backend = "plotly"
 from Player import items, set_item, Player, characters
+import plotly.graph_objs as go
 from cross_over_methods import one_point, two_points, anular, uniform
 from mutation_methods import single_gen, multi_gen_lim, multi_gen_uni, complete_mutation
 from selection_methods import random_sel, elite, roulette, universal, ranking, det_tourn, prob_tourn, boltzmann
@@ -44,6 +46,7 @@ def _mu_method(config):
         raise AttributeError(f"No such Mutation method {mutation_method}")
     return mutation
 
+
 def _cross_over_method(config):
     cross_over_method = config["method"]
     if cross_over_method == "one_point":
@@ -58,6 +61,7 @@ def _cross_over_method(config):
     else:
         raise AttributeError(f"No such CrossOver method {cross_over_method}")
     return cross_over
+
 
 def _selection_method(config, N: int, k: int):
     def get_method(method_name, config):
@@ -89,22 +93,32 @@ def _selection_method(config, N: int, k: int):
     selection_method2 = get_method(config["method2"], config)
     A = float(config["A"])
     if "fill" not in config:
-        return lambda pls: selection_method1(pls, math.floor(k*A)) + selection_method2(pls, math.ceil(k*(1-A)))
+        return lambda pls: selection_method1(pls, math.floor(k * A)) + selection_method2(pls, math.ceil(k * (1 - A)))
 
     fill = config["fill"]
     if fill == "all":
-        selection_method = lambda k_parents, k_kids: selection_method1(k_parents + k_kids, math.floor(N * A)) + selection_method2(k_parents + k_kids, math.floor(N * (1 - A)))
+        selection_method = lambda k_parents, k_kids: selection_method1(k_parents + k_kids,
+                                                                       math.floor(N * A)) + selection_method2(
+            k_parents + k_kids, math.floor(N * (1 - A)))
     else:
         if k >= N:
-            selection_method = lambda k_parents, k_kids: selection_method1(k_kids, math.floor(N * A)) + selection_method2(k_kids, math.floor(N * (1 - A)))
+            selection_method = lambda k_parents, k_kids: selection_method1(k_kids,
+                                                                           math.floor(N * A)) + selection_method2(
+                k_kids, math.floor(N * (1 - A)))
         else:
-            selection_method = lambda k_parents, k_kids: k_kids + selection_method1(k_parents, math.floor((N - k) * A)) + selection_method2(k_parents, math.floor((N - k) * (1 - A)))
+            selection_method = lambda k_parents, k_kids: k_kids + selection_method1(k_parents, math.floor(
+                (N - k) * A)) + selection_method2(k_parents, math.floor((N - k) * (1 - A)))
     return selection_method
+
 
 def calculate_stats(generation: [Player]):
     min_fitness = float("inf")
     max_fitness = 0
     avg_fitness = 0
+
+    min_height = float("inf")
+    max_height = 0
+    avg_height = 0
 
     for player in generation:
         avg_fitness += player.fitness
@@ -112,9 +126,18 @@ def calculate_stats(generation: [Player]):
             min_fitness = player.fitness
         if max_fitness < player.fitness:
             max_fitness = player.fitness
+
+        avg_height += player.attrs[Player.HEIGHT]
+        if min_height > player.attrs[Player.HEIGHT]:
+            min_height = player.attrs[Player.HEIGHT]
+        if max_height < player.attrs[Player.HEIGHT]:
+            max_height = player.attrs[Player.HEIGHT]
+
     if len(generation):
         avg_fitness /= len(generation)
-    return min_fitness, avg_fitness, max_fitness
+        avg_height /= len(generation)
+    return min_fitness, avg_fitness, max_fitness, min_height, avg_height, max_height
+
 
 async def main(websocket, path):
     # cargamos las configuraciones
@@ -154,57 +177,88 @@ async def main(websocket, path):
     stop_condition_method = stop_config["stop_condition"]
     if stop_condition_method == "gen_quantity":
         condition = int(stop_config["gen_quantity"])
-        stop_condition = lambda maxf,gene,timer: gen_quantity(condition, gene)
+        stop_condition = lambda maxf, gene, timer: gen_quantity(condition, gene)
     elif stop_condition_method == "time":
         condition = float(stop_config["time"])
-        stop_condition = lambda maxf,gene,timer: stop_by_time(condition, timer)
-    elif stop_condition_method =="fitness_goal":
+        stop_condition = lambda maxf, gene, timer: stop_by_time(condition, timer)
+    elif stop_condition_method == "fitness_goal":
         condition = float(stop_config["fitness_goal"])
-        stop_condition = lambda maxf,gene,timer: fitness_goal(condition, maxf)
+        stop_condition = lambda maxf, gene, timer: fitness_goal(condition, maxf)
     else:
         raise AttributeError(f"No such Stop Condition method {stop_condition_method}")
 
     print(f"Iterando")
-    stop_condition_met = False
-    historical_stats = []
+    historical_f_stats = []
+    historical_h_stats = []
     start_timer = datetime.now()
     max_f = 0
     i = 0
-    while not stop_condition(max_f, i, (datetime.now()-start_timer).seconds):
+    while not stop_condition(max_f, i, (datetime.now() - start_timer).seconds):
         if i % 5 == 0:
-            min_f, avg_f, max_f = calculate_stats(generation)
-            stats = (i, min_f, avg_f, max_f, len(generation))
-            historical_stats.append(stats)
-            await websocket.send(json.dumps(stats))
+            min_f, avg_f, max_f, min_h, avg_h, max_h = calculate_stats(generation)
+            f_stats = (i, min_f, avg_f, max_f, len(generation))
+            historical_f_stats.append(f_stats)
+            historical_h_stats.append((i, min_h, avg_h, max_h))
+            await websocket.send(json.dumps(f_stats))
         i += 1
         k_parents = selection(generation)
         k_kids = cross_over(k_parents)
         mutation(k_kids)
         generation = new_generation_selection(k_parents, k_kids)
 
-    col_names = ["i", "min_f", "avg_f", "max_f", "N"]
-    stats_df = pd.DataFrame(historical_stats, columns=col_names)
+    f_col_names = ["i", "min_f", "avg_f", "max_f", "N"]
+    h_col_names = ["i", "min_h", "avg_h", "max_h"]
+    f_stats_df = pd.DataFrame(historical_f_stats, columns=f_col_names)
+    h_stats_df = pd.DataFrame(historical_h_stats, columns=h_col_names)
     res_df = pd.DataFrame().from_records(generation,
-                                columns=["armas", "botas", "cascos", "guantes", "pecheras", "height", "fitness"])
-    print(f"Stop_condition_met = {stop_condition_met}")
+                                         columns=["armas", "botas", "cascos", "guantes", "pecheras", "height",
+                                                  "fitness"])
+
     if config["graphs"] == "true":
-        #px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
+        # px.box(res_df[["height", "fitness"]], x="height", y="fitness").show()
         top = res_df.nlargest(10, ["fitness"], keep="all")
         print(top)
-        px.scatter(top, x="height", y="fitness").show()
-        # params = f"Character:{char_class}, N:{N}, k={k}, stop condition:{stop_condition} <br>"
-        # for conf_section in ["SELECTION", "CROSS_OVER", "MUTATION", "NEW_GEN_SELECTION"]:
-        #     params += "("
-        #     for k,v in _config[conf_section].items():
-        #         params += f"{k.replace('_', ' ')}:{v}, "
-        #     params = params[:-2] + ")<br>"
-        px.line(stats_df, x="i", y=col_names[1:-1]).show()
+        # px.scatter(top, x="height", y="fitness").show()
+
+        fig = make_subplots(rows=3, cols=1,
+                            row_heights=[0.45, 0.45, 0.05],
+                            shared_xaxes=True, vertical_spacing=0.02)
+
+        for col in f_col_names[1:-1]:
+            fig.append_trace(go.Scatter(legendgroup='1', name=col, x=f_stats_df["i"], y=f_stats_df[col]), 1, 1)
+        for col in h_col_names[1:]:
+            fig.append_trace(go.Scatter(legendgroup='2', name=col, x=h_stats_df["i"], y=h_stats_df[col]), 2, 1)
+        fig.append_trace(go.Scatter(legendgroup='3', name="Count", x=f_stats_df["i"], y=f_stats_df["N"]), 3, 1)
+
+        # axis names
+        fig.update_yaxes(title_text="Fitness", row=1, col=1)
+        fig.update_yaxes(title_text="Height", row=2, col=1)
+        fig.update_yaxes(title_text="Count", row=3, col=1)
+        fig.update_xaxes(title_text="Generation", row=3, col=1)
+
+        # title
+        params = f"Fitness, Height & Generation count <br>"
+        params += f"Character:{char_class}, N:{N}, k={k}, stop condition:{stop_condition_method} <br>"
+        params += "<span style='font-size: 10px;'>"
+        for conf_section in ["SELECTION", "CROSS_OVER", "MUTATION", "NEW_GEN_SELECTION"]:
+            for k, v in _config[conf_section].items():
+                if k not in _config["DEFAULT"].keys():
+                    params += f"{k.replace('_', ' ').title()}: {v.replace('_', ' ').title()}, "
+            params = params[:-2] + " | "
+        params += "</span>"
+        fig.update_layout(
+            title_text=params,
+            legend_tracegroupgap=250,
+        )
+        fig.show()
 
 
 class Ws_mock:
     @staticmethod
     async def send(data):
         pass
+
+
 if __name__ == '__main__':
     _config.read('config.cfg')
     ws_config = _config["WEBSOCKET"]
