@@ -212,7 +212,7 @@ async def main(websocket, path):
             historical_h_stats.append(h_stats)
             d_stats = (i, *diversity)
             historical_d_stats.append(d_stats)
-            await websocket.send(json.dumps((f_stats, h_stats, d_stats)))
+            #await websocket.send(json.dumps((f_stats, h_stats, d_stats)))
         i += 1
         k_parents = selection(generation, i)
         k_kids = cross_over(k_parents)
@@ -248,7 +248,8 @@ async def main(websocket, path):
             fig.append_trace(go.Scatter(legendgroup='3', name=col, x=d_stats_df["i"], y=d_stats_df[col]), 3, 1)
 
         fig.add_trace(
-            go.Scatter(name="FxH", x=top["height"], y=top["fitness"], mode='markers', marker=dict(size=np.log(top["count"]))),
+            go.Scatter(name="FxH", x=top["height"], y=top["fitness"], mode='markers',
+                       marker=dict(size=top["count"], sizemode='area', sizemin=4, sizeref=2.*max(top["count"])/(100.**2))),
             row=1, col=2)
 
         # axis names
