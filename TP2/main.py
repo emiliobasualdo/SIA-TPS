@@ -5,6 +5,7 @@ import os
 import random
 from datetime import datetime
 
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import time
@@ -247,7 +248,7 @@ async def main(websocket, path):
             fig.append_trace(go.Scatter(legendgroup='3', name=col, x=d_stats_df["i"], y=d_stats_df[col]), 3, 1)
 
         fig.add_trace(
-            go.Scatter(name="FxH", x=top["height"], y=top["fitness"], mode='markers', marker=dict(size=top["count"])),
+            go.Scatter(name="FxH", x=top["height"], y=top["fitness"], mode='markers', marker=dict(size=np.log(top["count"]))),
             row=1, col=2)
 
         # axis names

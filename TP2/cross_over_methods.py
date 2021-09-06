@@ -8,11 +8,11 @@ def one_point(players: [Player], mutation_method: Callable):
     new_born = []
     # agarramos de a pares
     for i in range(int(len(players) / 2)):
-        point = random.randint(0, Player.ITEMS_LEN)
-        new_p = Player(*players[i].attrs[0:point], *players[i + 1].attrs[point:], players[0].char_class)
+        point = random.randint(0, Player.ATTR_LEN-1)
+        new_p = Player(*players[i].attrs[:point], *players[i + 1].attrs[point:], players[0].char_class)
         mutation_method(new_p)
         new_born.append(new_p)
-        new_p = Player(*players[i + 1].attrs[0:point], *players[i].attrs[point:], players[0].char_class)
+        new_p = Player(*players[i + 1].attrs[:point], *players[i].attrs[point:], players[0].char_class)
         mutation_method(new_p)
         new_born.append(new_p)
     return new_born
@@ -22,14 +22,14 @@ def two_points(players: [Player], mutation_method: Callable):
     new_born = []
     # agarramos de a pares
     for i in range(int(len(players) / 2)):
-        point1 = random.randint(0, Player.ITEMS_LEN)
-        point2 = random.randint(0, Player.ITEMS_LEN)
-        new_p = Player(*players[i].attrs[0:point1],
+        point1 = random.randint(0, Player.ATTR_LEN-2)
+        point2 = random.randint(point1+1, Player.ATTR_LEN-1)
+        new_p = Player(*players[i].attrs[:point1],
                        *players[i + 1].attrs[point1:point2],
                        *players[i].attrs[point2:], players[0].char_class)
         mutation_method(new_p)
         new_born.append(new_p)
-        new_p = Player(*players[i + 1].attrs[0:point1],
+        new_p = Player(*players[i + 1].attrs[:point1],
                        *players[i].attrs[point1:point2],
                        *players[i + 1].attrs[point2:], players[0].char_class)
         mutation_method(new_p)
@@ -41,14 +41,14 @@ def anular(players: [Player], mutation_method: Callable):
     new_born = []
     # agarramos de a pares
     for i in range(int(len(players) / 2)):
-        point = random.randint(0, Player.ITEMS_LEN)
-        length = random.randint(0, Player.ITEMS_LEN - point)
-        new_p = Player(*players[i].attrs[0:point],
+        point = random.randint(0, Player.ATTR_LEN-1)
+        length = random.randint(0, Player.ATTR_LEN - point)
+        new_p = Player(*players[i].attrs[:point],
                        *players[i + 1].attrs[point:point + length],
                        *players[i].attrs[point + length:], players[0].char_class)
         mutation_method(new_p)
         new_born.append(new_p)
-        new_p = Player(*players[i + 1].attrs[0:point],
+        new_p = Player(*players[i + 1].attrs[:point],
                        *players[i].attrs[point:point + length],
                        *players[i + 1].attrs[point + length:], players[0].char_class)
         mutation_method(new_p)
