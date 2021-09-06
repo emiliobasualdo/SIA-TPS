@@ -18,7 +18,7 @@ from Player import items, set_item, Player, characters, item_indexes
 from cross_over_methods import one_point, two_points, anular, uniform
 from mutation_methods import single_gen, multi_gen_lim, multi_gen_uni, complete_mutation
 from selection_methods import random_sel, elite, roulette, universal, ranking, det_tourn, prob_tourn, boltzmann
-from break_methods import gen_quantity, fitness_goal, stop_by_time
+from break_methods import content, gen_quantity, fitness_goal, stop_by_time
 
 _config = configparser.ConfigParser()
 pd.options.plotting.backend = "plotly"
@@ -186,13 +186,16 @@ async def main(websocket, path):
     stop_condition_method = stop_config["stop_condition"]
     if stop_condition_method == "gen_quantity":
         condition = int(stop_config["gen_quantity"])
-        stop_condition = lambda maxf, gene, timer: gen_quantity(condition, gene)
+        stop_condition = lambda maxf, gene, timer, gen_count: gen_quantity(condition, gene)
     elif stop_condition_method == "time":
         condition = float(stop_config["time"])
-        stop_condition = lambda maxf, gene, timer: stop_by_time(condition, timer)
+        stop_condition = lambda maxf, gene, timer, gen_count: stop_by_time(condition, timer)
     elif stop_condition_method == "fitness_goal":
         condition = float(stop_config["fitness_goal"])
-        stop_condition = lambda maxf, gene, timer: fitness_goal(condition, maxf)
+        stop_condition = lambda maxf, gene, timer, gen_count: fitness_goal(condition, maxf)
+    elif stop_condition_method == "content":
+        condition = int(stop_config["content"])
+        stop_condition = lambda maxf, gene, timer, gen_count: content(condition, gen_count)
     else:
         raise AttributeError(f"No such Stop Condition method {stop_condition_method}")
 
@@ -203,9 +206,11 @@ async def main(websocket, path):
     start_timer = datetime.now()
     max_f = 0
     i = 0
-    while not stop_condition(max_f, i, (datetime.now() - start_timer).seconds):
+    gen_counter = 0
+    aux_max_f = 0
+    while not stop_condition(max_f, i, (datetime.now() - start_timer).seconds, gen_counter):
+        min_f, avg_f, max_f, min_h, avg_h, max_h, diversity = calculate_stats(generation)
         if i % 5 == 0:
-            min_f, avg_f, max_f, min_h, avg_h, max_h, diversity = calculate_stats(generation)
             f_stats = (i, min_f, avg_f, max_f)
             historical_f_stats.append(f_stats)
             h_stats = (i, min_h, avg_h, max_h)
@@ -213,6 +218,11 @@ async def main(websocket, path):
             d_stats = (i, *diversity)
             historical_d_stats.append(d_stats)
             #await websocket.send(json.dumps((f_stats, h_stats, d_stats)))
+        if max_f != aux_max_f:
+            aux_max_f = max_f
+            gen_counter = 0
+        else:
+            gen_counter += 1
         i += 1
         k_parents = selection(generation, i)
         k_kids = cross_over(k_parents)
