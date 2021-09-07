@@ -45,7 +45,7 @@ def roulette(players: [Player], k: int, fitness_accessor=Player.F_ACCESSOR) -> [
             lower_value = player_accumulative_fitness[j][0]
             upper_value = player_accumulative_fitness[j + 1][0]
 
-            if lower_value <= r <= upper_value:
+            if lower_value < r <= upper_value:
                 selection.append(player_accumulative_fitness[j + 1][1])
     return selection
 
@@ -61,9 +61,9 @@ def universal(players: [Player], k: int) -> [Player]:
         relative_fitness = player.fitness / population_fitness
         accumulative_fitness = accumulative_fitness + relative_fitness
         player_accumulative_fitness.append((accumulative_fitness, player))
+    r = random.uniform(0, 1)
     for i in range(k):
-        random_number = random.uniform(0, 1)
-        r = (random_number + i) / k
+        r = (r + i) / k
         for j in range((len(player_accumulative_fitness) - 1)):
             lower_value = player_accumulative_fitness[j][0]
             upper_value = player_accumulative_fitness[j + 1][0]
@@ -73,29 +73,21 @@ def universal(players: [Player], k: int) -> [Player]:
     return selection
 
 def ranking(players: [Player], k: int) -> [Player]:
-    selection = []
     players.sort(key=_sorter, reverse=True)
     population = len(players)
     for i, player in enumerate(players):
         relative_fitness = (population - i) / population
         player.relative_fitness = relative_fitness
 
-    ranked_players = roulette(players, k, Player.RF_ACCESSOR)
-    for ranked_player in ranked_players:
-        for player in players:
-            if player.id == ranked_player.id:
-                selection.append(player)
-                break
-
-    return selection
+    return roulette(players, k, Player.RF_ACCESSOR)
 
 def det_tourn(players: [Player], k: int, m: int) -> [Player]:
     selection = []
     population = len(players)
     for i in range(k):
-        first_selection = players[random.randint(0, population - 1)].copy()
-        for j in range(m):
-            m_selection = players[random.randint(0, population - 1)].copy()
+        first_selection = players[random.randint(0, population - 1)]
+        for j in range(m-1):
+            m_selection = players[random.randint(0, population - 1)]
             if m_selection.fitness > first_selection.fitness:
                 first_selection = m_selection
         selection.append(first_selection)
