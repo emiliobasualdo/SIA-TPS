@@ -223,7 +223,7 @@ async def main(websocket, path):
             historical_h_stats.append(h_stats)
             d_stats = (i, *diversity)
             historical_d_stats.append(d_stats)
-            #await websocket.send(json.dumps((f_stats, h_stats, d_stats)))
+            await websocket.send(json.dumps((f_stats, h_stats, d_stats)))
         #content cut
         if max_f != aux_max_f:
             aux_max_f = max_f
