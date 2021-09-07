@@ -18,7 +18,7 @@ from Player import items, set_item, Player, characters, item_indexes
 from cross_over_methods import one_point, two_points, anular, uniform
 from mutation_methods import single_gen, multi_gen_lim, multi_gen_uni, complete_mutation
 from selection_methods import random_sel, elite, roulette, universal, ranking, det_tourn, prob_tourn, boltzmann
-from break_methods import content, gen_quantity, fitness_goal, stop_by_time
+from break_methods import content, gen_quantity, fitness_goal, stop_by_time, structure
 
 _config = configparser.ConfigParser()
 pd.options.plotting.backend = "plotly"
@@ -184,6 +184,7 @@ async def main(websocket, path):
     # iteramos
     stop_config = _config["STOP_CONDITION"]
     stop_condition_method = stop_config["stop_condition"]
+    max_div = float("inf")
     if stop_condition_method == "gen_quantity":
         condition = int(stop_config["gen_quantity"])
         stop_condition = lambda maxf, gene, timer, gen_count, div_count: gen_quantity(condition, gene)
@@ -199,7 +200,7 @@ async def main(websocket, path):
     elif stop_condition_method == "structure":
         condition = int(stop_config["structure"])
         max_div = int(stop_config["max_gen_fixed"])
-        stop_condition = lambda maxf, gene, timer, gen_count, div_count: content(condition, div_count)
+        stop_condition = lambda maxf, gene, timer, gen_count, div_count: structure(condition, div_count)
     else:
         raise AttributeError(f"No such Stop Condition method {stop_condition_method}")
 
@@ -230,13 +231,14 @@ async def main(websocket, path):
         else:
             gen_counter += 1
         #structure cut
-        try:
-            if diversity >= max_div:
-                div_gen_count = 0
-            else:
-                div_gen_count += 1
-        except:
-            pass
+        diversity_count = 0
+        for d in diversity:
+            diversity_count += d
+        if diversity_count <= max_div:
+            div_gen_count = 0
+        else:
+            div_gen_count += 1
+
         i += 1
         k_parents = selection(generation, i)
         k_kids = cross_over(k_parents)
