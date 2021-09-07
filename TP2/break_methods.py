@@ -15,3 +15,12 @@ def fitness_goal(condition: int, maxf: int):
         return True
     return False
 
+def content(condition: int, gen_count: int):
+	if gen_count >= condition:
+		return True
+	return False
+
+def structure(condition: int, div_count: int):
+	if div_count >= condition:
+		return True
+	return False
