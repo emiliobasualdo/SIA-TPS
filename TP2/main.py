@@ -224,20 +224,20 @@ async def main(websocket, path):
             d_stats = (i, *diversity)
             historical_d_stats.append(d_stats)
             await websocket.send(json.dumps((f_stats, h_stats, d_stats)))
-        #content cut
-        if max_f != aux_max_f:
-            aux_max_f = max_f
-            gen_counter = 0
-        else:
-            gen_counter += 1
-        #structure cut
-        diversity_count = 0
-        for d in diversity:
-            diversity_count += d
-        if diversity_count <= max_div:
-            div_gen_count = 0
-        else:
-            div_gen_count += 1
+            #content cut
+            if max_f != aux_max_f:
+                aux_max_f = max_f
+                gen_counter = 0
+            else:
+                gen_counter += 1
+            #structure cut
+            diversity_count = 0
+            for d in diversity:
+                diversity_count += d
+            if diversity_count <= max_div:
+                div_gen_count = 0
+            else:
+                div_gen_count += 1
 
         i += 1
         k_parents = selection(generation, i)
