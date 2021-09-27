@@ -10,6 +10,8 @@ import plotly.express as px
 import plotly.graph_objs as go
 import pandas as pd
 
+from TP3.utils import deminmaxnormalization, identity
+import ej2
 
 class Perceptron:
     def __init__(self, training_set_name, X: np.ndarray, Y: np.ndarray, n, cota, G=None, G_prima=None):
@@ -19,8 +21,8 @@ class Perceptron:
         self.n = n
         self.cota = cota
         if G is None:
-            self.G = lambda x :x
-            self.G_prima = lambda x: x
+            self.G = identity
+            self.G_prima = identity
         else:
             self.G = G
             self.G_prima = G_prima
@@ -32,7 +34,7 @@ class Perceptron:
     def train(self):
         P, N = self.X.shape
         i = 0
-        w = np.zeros(N)
+        w = np.random.random(N)
         w_min = None
         error = 1
         error_min = float("inf")
@@ -183,110 +185,32 @@ def perceptron_simple_act(training_set_name, X: np.ndarray, Y: np.ndarray, n=0.1
     #    w = np.linalg.inv(X.T.dX_FILE(X)).dot(X.T).dot(Y)
 
 
-def minmaxnormalization(arr: np.array):
-    new_arr = []
-    if len(arr.shape) == 1:
-        if arr.max() - arr.min() == 0:
-            return arr.copy()
-        return -1 + (arr - arr.min()) * 2 / (arr.max() - arr.min())
-
-    for i in range(arr.shape[1]):
-        col = arr[:, i]
-        if col.max() - col.min() == 0:
-            n_col = col
-        else:
-            n_col = -1 + (col - col.min()) * 2 / (col.max() - col.min())
-        new_arr.append(n_col)
-    return np.column_stack(new_arr)
-
-
-def deminmaxnormalization(original: np.array, results: np.array):
-    return (results + 1) * (original.max() - original.min()) / 2 + original.min()
-
-
-class TestPerceptron(unittest.TestCase):
-
-    def setUp(self) -> None:
-        self.X_XOR = np.array([
-            [-1, 1],
-            [1, -1],
-            [-1, -1],
-            [1, 1]
-        ])
-        self.Y_XOR = np.array([1, 1, -1, -1])
-
-        self.X_AND = np.array([
-            [-1, 1],
-            [1, -1],
-            [-1, -1],
-            [1, 1]
-        ])
-        self.Y_AND = np.array([-1, -1, -1, 1])
-
-        X_FILE = genfromtxt('files/training_set.txt', delimiter='')
-        self.Y_FILE = genfromtxt('files/expected_out.txt', delimiter='')
-        # Agregamos una columna a X
-        P, _ = X_FILE.shape
-        self.X_FILE = np.c_[X_FILE, np.ones(P)]
-
-        self.X_N_FILE = minmaxnormalization(self.X_FILE)
-        self.Y_N_FILE = minmaxnormalization(self.Y_FILE)
-
-    def test_PSA_AND_returns_error_0(self):
-        w, e = perceptron_simple_act("AND", self.X_AND, self.Y_AND, cota=10000)
-        expected_w = np.array([1, 1, -1])
-        self.assertEqual(0, e)
-        self.assertTrue((expected_w == np.sign(w)).all())
-
-    def test_PSA_XOR_returns_error_not_0(self):
-        w, e = perceptron_simple_act("XOR", self.X_XOR, self.Y_XOR, cota=10000)
-        expected_w = np.array([1, 1, -1])
-        self.assertNotEqual(0, e)
-        self.assertFalse((expected_w == np.sign(w)).all())
-
-    def test_PSL_single_input_AND_returns_error_not_0(self):
-        w, e = perceptron_simple_lineal_single_input("AND", self.X_AND, self.Y_AND, cota=10000)
-        self.assertNotEqual(0, e)
-
-    def test_PSL_single_input_FILE_returns_expected_w(self):
-        w, e = perceptron_simple_lineal_single_input("File", self.X_N_FILE, self.Y_N_FILE, cota=100000, n=0.1,
-                                                     plot=False)
-        expected_w = np.linalg.inv(self.X_N_FILE.T.dot(self.X_N_FILE)).dot(self.X_N_FILE.T).dot(self.Y_N_FILE)
-        self.assertTrue(np.isclose(expected_w, w).all())
-
-    def test_PSL_multiple_input_FILE_returns_expected_w(self):
-        w, e = perceptron_simple_lineal_multiple_input("File", self.X_N_FILE, self.Y_N_FILE, cota=100000, n=0.01,
-                                                       plot=False)
-        expected_w = np.linalg.inv(self.X_N_FILE.T.dot(self.X_N_FILE)).dot(self.X_N_FILE.T).dot(self.Y_N_FILE)
-        self.assertTrue(np.isclose(expected_w, w).all())
 
 if __name__ == '__main__':
-    test = TestPerceptron()
-    test.setUp()
-    squares = np.power(test.Y_FILE - test.Y_FILE.mean(), 2).sum()
+    squares = np.power(ej2.Y_FILE - ej2.Y_FILE.mean(), 2).sum()
     def Perceptron_Simple_lineal(n):
-        p = Perceptron("File", X=test.X_FILE, Y=test.Y_FILE, n=n, cota=1000)
+        p = Perceptron("File", X=ej2.X_FILE, Y=ej2.Y_FILE, n=n, cota=1000)
         p.train()
-        o = test.X_FILE.dot(p.w)
-        residuals = np.power(test.Y_FILE - o, 2).sum()
+        o = ej2.X_FILE.dot(p.w)
+        residuals = np.power(ej2.Y_FILE - o, 2).sum()
         return 1 - (residuals/squares) # https://en.wikipedia.org/wiki/Coefficient_of_determination
 
     def Perceptron_Simple_no_lineal(n):
         G = np.tanh
-        G_prima = lambda h: (1 - G(h) ** 2)
-        p = Perceptron("File", X=test.X_N_FILE, Y=test.Y_N_FILE, n=n, cota=1000, G=G, G_prima=G_prima)
+        G_prima = lambda h: 1 - G(h) ** 2
+        p = Perceptron("File", X=ej2.X_N_FILE, Y=ej2.Y_N_FILE, n=n, cota=1000, G=G, G_prima=G_prima)
         p.train()
-        o = test.X_N_FILE.dot(p.w)
-        n_o = deminmaxnormalization(test.Y_FILE, o)
-        residuals = np.power(test.Y_FILE - n_o, 2).sum()
-        # np.abs(test.Y_FILE - n_o).sum() / len(n_o)
+        o = ej2.X_N_FILE.dot(p.w)
+        n_o = deminmaxnormalization(ej2.Y_FILE, o)
+        residuals = np.power(ej2.Y_FILE - n_o, 2).sum()
+        # np.abs(ej2.Y_FILE - n_o).sum() / len(n_o)
         return 1 - (residuals / squares)
 
 
     def Perceptron_Simple_no_lineal_cross(args):
         n, training_X, training_Y, test_X, test_Y = args
         G = np.tanh
-        G_prima = lambda h: (1 - G(h) ** 2)
+        G_prima = lambda h: 1 - G(h) ** 2
         p = Perceptron("File", X=training_X, Y=training_Y, n=n, cota=1000, G=G, G_prima=G_prima)
         p.train()
         # training residual
@@ -311,7 +235,7 @@ if __name__ == '__main__':
         fig.show()
 
 
-    p = "PSNL cross"
+    p = "PSL time"
     pool = multiprocessing.Pool()
     if p == "PSL":
         ns = np.linspace(0.00001, 1, 10000, endpoint=True)
@@ -323,6 +247,15 @@ if __name__ == '__main__':
         title="PSNL: R² en función de n"
         results = pool.map(Perceptron_Simple_no_lineal, ns)
         simple_graph(ns, results, title)
+    elif p == "PSL time":
+        n = 0.000001
+        p = Perceptron("File", X=ej2.X_FILE, Y=ej2.Y_FILE, n=n, cota=10000)
+        p.train()
+        fig = px.line(x=range(p.iterations), y=p.errors)
+        fig.update_layout(title=f"PSL error en función de iteraciones, n={n}", font=dict(size=22))
+        fig.update_xaxes(title="Iteraciones")
+        fig.update_yaxes(title="Suma de error cuadrado")
+        fig.show()
     elif p =="PSNL cross":
         ns = np.linspace(0.0001, 0.5, 1000, endpoint=True)
         t_pcts = {0.01:"red", 0.1:"", 0.5:"", 0.9:"blue"}
@@ -330,12 +263,12 @@ if __name__ == '__main__':
         fig = go.Figure()
         title = f"PSNL: R² en función de n. Cross validation"
         for t_pct, color in t_pcts.items():
-            training_len = int(test.X_N_FILE.shape[0] * t_pct)
-            training_X = test.X_N_FILE[0:training_len]
-            training_Y = test.Y_N_FILE[0:training_len]
+            training_len = int(ej2.X_N_FILE.shape[0] * t_pct)
+            training_X = ej2.X_N_FILE[0:training_len]
+            training_Y = ej2.Y_N_FILE[0:training_len]
 
-            test_X = test.X_N_FILE[training_len:]
-            test_Y = test.Y_N_FILE[training_len:]
+            test_X = ej2.X_N_FILE[training_len:]
+            test_Y = ej2.Y_N_FILE[training_len:]
 
             resp = pool.map(Perceptron_Simple_no_lineal_cross, zip(ns, repeat(training_X), repeat(training_Y), repeat(test_X), repeat(test_Y)))
 
