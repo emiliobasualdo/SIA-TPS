@@ -85,8 +85,8 @@ class Multilayer_perceptron:
                 V_m_1 = V_m
                 h_m = W_m.dot(V_m_1)
                 V_m = self.G(h_m)
-            return h_m
-        return np.apply_along_axis(_eval, axis=1, arr=X)
+            return V_m
+        return np.apply_along_axis(_eval, axis=1, arr=X).flatten()
 
 def multi_XOR():
     hidden_layers = [3]
@@ -109,14 +109,64 @@ def multi_XOR():
     fig.update_yaxes(title="Error cuadrado medio")
     fig.show()
 
-def multi_parity():
-    hidden_layers = [10]
-    m = Multilayer_perceptron(ej3.X2, ej3.Y, n=0.03, hidden_layers=hidden_layers, cota=4000, e_error=0.04, G=tanh, G_prima=tanh_prima)
-    m.train()
-    print(m.eval(ej3.X2), ej3.X)
-    print(m.last_hs, ej3.Y)
-    print("converged", m.converged, m.error)
+def multi_parity_error():
+    hidden_layers_opts =[
+        [10],
+        [10,10],
+        [10,10, 10]
+    ]
+    n = 0.03
+    cota = 5000
+    fig = go.Figure()
+    momentum_alpha = 0.5
+    for hidden_layers in hidden_layers_opts:
+        m = Multilayer_perceptron(ej3.X2, ej3.Y, n=n, hidden_layers=hidden_layers, cota=cota, e_error=0.04, G=tanh, G_prima=tanh_prima, momentum_alpha=momentum_alpha)
+        m.train()
+        fig.add_trace(go.Scatter(x=list(range(m.i)), y=m.errors, name=str(hidden_layers)))
+    fig.update_layout(
+        title=f"Multilayer binary n={n}, cota={cota}, alpha={momentum_alpha}",
+        font=dict(size=22))
+    fig.update_xaxes(title="Iteraciones")
+    fig.update_yaxes(title="Error cuadrado medio")
+    fig.show()
+
+
+def binary_accuracy(predictions, observations):
+    prediction_error = (np.sign(predictions) - observations) == 0
+    certainty = np.abs(predictions[prediction_error]).sum()
+    return certainty/ len(observations)
+
+def multi_parity_accuracy():
+    cota = 5000
+    hidden_layers = [3]
+    training_pct = 0.8
+    #n = 0.03
+    MS = [0.001, 0.01, 0.05, 0.1, 0.3, 0.5]
+    momentum_alpha = 0.3
+    fig = go.Figure()
+    test_acc = []
+    training_acc = []
+    for n in MS:
+        training_set_len = int(ej3.X2.shape[0] * training_pct)
+        training_set_X = ej3.X2[0:training_set_len,:]
+        training_set_Y = ej3.Y[0:training_set_len]
+        testing_set_X = ej3.X2[training_set_len:,:]
+        testing_set_Y = ej3.Y[training_set_len:]
+        m = Multilayer_perceptron(training_set_X, training_set_Y, n=n, hidden_layers=hidden_layers, cota=cota,
+                                  e_error=0.04, G=tanh, G_prima=tanh_prima, momentum_alpha=momentum_alpha)
+        m.train()
+        test_acc.append(binary_accuracy(m.eval(testing_set_X), testing_set_Y))
+        training_acc.append(binary_accuracy(m.eval(training_set_X), training_set_Y))
+
+    MS_STR = [str(m) for m in MS]
+    fig.add_trace(go.Bar(x=MS_STR, y=test_acc, name="test"))
+    fig.add_trace(go.Bar(x=MS_STR, y=training_acc, name="training"))
+    fig.update_layout(title=f"Multilayer binary momentum={momentum_alpha}, cota={cota}, t_pct={training_pct}, hidden_l={hidden_layers}",font=dict(size=22))
+    fig.update_xaxes(title="Tasa de aprendizaje")
+    fig.update_yaxes(title="Accuracy")
+    fig.show()
 
 if __name__ == '__main__':
     # multi_XOR()
-    multi_parity()
+    # multi_parity_error()
+    multi_parity_accuracy()

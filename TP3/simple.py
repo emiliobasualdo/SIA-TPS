@@ -206,7 +206,6 @@ if __name__ == '__main__':
         # np.abs(ej2.Y_FILE - n_o).sum() / len(n_o)
         return 1 - (residuals / squares)
 
-
     def Perceptron_Simple_no_lineal_cross(args):
         n, training_X, training_Y, test_X, test_Y = args
         G = np.tanh
