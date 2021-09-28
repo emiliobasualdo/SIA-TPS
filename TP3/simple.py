@@ -226,6 +226,22 @@ if __name__ == '__main__':
         test_err = 1 - (residuals / squares)
         return training_err, test_err
 
+    def Perceptron_Simple_lineal_cross(args):
+        n, training_X, training_Y, test_X, test_Y = args
+        p = Perceptron("File", X=training_X, Y=training_Y, n=n, cota=1000)
+        p.train()
+        # training residual
+        o = training_X.dot(p.w)
+        residuals = np.power(training_Y - o, 2).sum()
+        squares = np.power(training_Y - training_Y.mean(), 2).sum()
+        training_err = 1 - (residuals / squares)
+        # test residual
+        o = test_X.dot(p.w)
+        residuals = np.power(test_Y - o, 2).sum()
+        squares = np.power(test_Y - test_Y.mean(), 2).sum()
+        test_err = 1 - (residuals / squares)
+        return training_err, test_err
+
     def simple_graph(x, y, title):
         fig = px.line(x=x, y=y)
         fig.update_layout(title=title, font=dict(size=22))
@@ -234,10 +250,10 @@ if __name__ == '__main__':
         fig.show()
 
 
-    p = "PSL time"
+    p = "PSL cross"
     pool = multiprocessing.Pool()
     if p == "PSL":
-        ns = np.linspace(0.00001, 1, 10000, endpoint=True)
+        ns = np.linspace(0.001, 1, 1000, endpoint=True)
         title="PSL R² en función de n"
         results = pool.map(Perceptron_Simple_lineal, ns)
         simple_graph(ns, results, title)
@@ -277,5 +293,29 @@ if __name__ == '__main__':
 
         fig.update_layout(title=title, font=dict(size=22))
         fig.update_xaxes(title="Tasa de aprendizaje", type="log")
+        fig.update_yaxes(title="Coeficiente de determinación")
+        fig.show()
+    elif p =="PSL cross":
+        ns = np.linspace(0.0001, 0.5, 1000, endpoint=True)
+        t_pcts = {0.01:"red", 0.1:"", 0.5:"", 0.9:"blue"}
+        # t_pcts = {0.1:"red", 0.9:"blue"}
+        fig = go.Figure()
+        title = f"PSL: R² en función de n. Cross validation"
+        for t_pct, color in t_pcts.items():
+            training_len = int(ej2.X_FILE.shape[0] * t_pct)
+            training_X = ej2.X_FILE[0:training_len]
+            training_Y = ej2.Y_FILE[0:training_len]
+
+            test_X = ej2.X_FILE[training_len:]
+            test_Y = ej2.Y_FILE[training_len:]
+
+            resp = pool.map(Perceptron_Simple_lineal_cross, zip(ns, repeat(training_X), repeat(training_Y), repeat(test_X), repeat(test_Y)))
+
+            training_e, test_e = zip(*resp)
+            # fig.add_trace(go.Scatter(x=ns, y=training_e, name=f"Training {t_pct}", line=dict(color=color, dash='dash')))
+            fig.add_trace(go.Scatter(x=ns, y=test_e, name=f"Test {round(1-t_pct, 2)}"))#, line=dict(color=color)))
+
+        fig.update_layout(title=title, font=dict(size=22))
+        fig.update_xaxes(title="Tasa de aprendizaje")
         fig.update_yaxes(title="Coeficiente de determinación")
         fig.show()

@@ -9,7 +9,7 @@ import ej2
 class TestPerceptron(unittest.TestCase):
 
     def test_PSA_AND_returns_error_0(self):
-        w, e = perceptron_simple_act("AND", ej2.X_AND, ej2.Y_AND, cota=10000)
+        w, e = perceptron_simple_act("AND", ej2.X_AND, ej2.Y_AND, cota=20)
         expected_w = np.array([1, 1, -1])
         self.assertEqual(0, e)
         self.assertTrue((expected_w == np.sign(w)).all())
