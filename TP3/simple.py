@@ -232,14 +232,10 @@ if __name__ == '__main__':
         p.train()
         # training residual
         o = training_X.dot(p.w)
-        residuals = np.power(training_Y - o, 2).sum()
-        squares = np.power(training_Y - training_Y.mean(), 2).sum()
-        training_err = 1 - (residuals / squares)
+        training_err = 0.5 * np.power(training_Y - o, 2).mean()
         # test residual
         o = test_X.dot(p.w)
-        residuals = np.power(test_Y - o, 2).sum()
-        squares = np.power(test_Y - test_Y.mean(), 2).sum()
-        test_err = 1 - (residuals / squares)
+        test_err = np.power(test_Y - o, 2).mean()
         return training_err, test_err
 
     def simple_graph(x, y, title):
@@ -296,7 +292,7 @@ if __name__ == '__main__':
         fig.update_yaxes(title="Coeficiente de determinación")
         fig.show()
     elif p =="PSL cross":
-        ns = np.linspace(0.0001, 0.5, 1000, endpoint=True)
+        ns = np.linspace(0.0001, 0.5, 100, endpoint=True)
         t_pcts = {0.01:"red", 0.1:"", 0.5:"", 0.9:"blue"}
         # t_pcts = {0.1:"red", 0.9:"blue"}
         fig = go.Figure()
@@ -313,9 +309,9 @@ if __name__ == '__main__':
 
             training_e, test_e = zip(*resp)
             # fig.add_trace(go.Scatter(x=ns, y=training_e, name=f"Training {t_pct}", line=dict(color=color, dash='dash')))
-            fig.add_trace(go.Scatter(x=ns, y=test_e, name=f"Test {round(1-t_pct, 2)}"))#, line=dict(color=color)))
+            fig.add_trace(go.Scatter(x=ns, y=np.array(test_e)/30000, name=f"Test {round(1-t_pct, 2)}"))#, line=dict(color=color)))
 
         fig.update_layout(title=title, font=dict(size=22))
         fig.update_xaxes(title="Tasa de aprendizaje")
-        fig.update_yaxes(title="Coeficiente de determinación")
+        fig.update_yaxes(title="Error cuadrado medio", type="log")
         fig.show()
